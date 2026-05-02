@@ -1019,3 +1019,290 @@
 **Next Step**: User to fill in [Answer]: tags in the plan document
 
 ---
+
+## CONSTRUCTION PHASE - Functional Design (Unit 2) - Answers Analyzed
+**Timestamp**: 2026-05-02T00:00:00Z
+**User Input**: "figmaは他で平行して進めるのでunit2を進めたいです。質問に回答しました。"
+**AI Response**: 全25問の回答を確認。Q7.2（無効なドボン宣言）について曖昧さを確認。
+**Context**: Unit 2 Functional Design プランへの回答完了
+
+---
+
+## CONSTRUCTION PHASE - Functional Design (Unit 2) - Q7.2 Clarification
+**Timestamp**: 2026-05-02T00:01:00Z
+**User Input**: "Aです。処理としては内部でペナルティ処理に続きつつ、画面にはfalseで返して画面描画処理が走るのかなと何となく思って回答しました。"
+**AI Response**: 確認完了。「内部でペナルティ処理を実行しつつ、レスポンスとしてはfalse（失敗）を返す」設計として確定。
+**Context**: Q7.2 = ペナルティあり（A）、ただしクライアントへのレスポンスはfalse
+
+---
+
+## CONSTRUCTION PHASE - Functional Design (Unit 2) - Artifacts Generated
+**Timestamp**: 2026-05-02T00:05:00Z
+**Status**: Complete
+**Outputs**:
+- aidlc-docs/construction/unit2-backend/functional-design/domain-entities.md
+  - フロントエンドと共通エンティティ（再利用）
+  - バックエンド専用エンティティ: DeckState, TurnState, MultiplierState, DoboPhaseState, GameSession, CardValidationResult, DoboValidationResult
+- aidlc-docs/construction/unit2-backend/functional-design/business-logic-model.md
+  - GameEngine: ゲーム初期化、カード操作、特殊カード効果（ハンドラーパターン）、ターン管理
+  - DoboDeclaration: ドボン宣言、演算式自動計算（全組み合わせ試行）、返し判定フェーズ、タイムアウト
+  - MultiplierCalculator: 累積計算（2^n）、各倍率イベントメソッド
+  - DeckManager: 定数配列初期化、カード配布、山札再生成（場の最後の1枚を除く）
+  - CardValidator: カード出し検証、複数枚検証
+  - PaymentCalculator: ドボン支払い、バースト支払い、ペナルティ支払い
+- aidlc-docs/construction/unit2-backend/functional-design/business-rules.md
+  - 9カテゴリのビジネスルール（カード操作、特殊カード、ドボン、返しドボン、バースト、倍率、ゲーム継続、エラーハンドリング、テスト）
+- aidlc-docs/construction/unit2-backend/functional-design/api-contracts.md
+  - WebSocket イベント（クライアント→サーバー 7種、サーバー→クライアント 8種）
+  - REST API（再接続用、履歴取得用）
+  - エラーコード一覧
+**Key Design Decisions**:
+- バックエンド専用エンティティ追加（DeckState, TurnState, MultiplierState, DoboPhaseState）
+- メモリのみで管理（永続化なし）
+- GameEngine: ゲーム状態管理のみ（ドボン・倍率は委譲）
+- 特殊カード: ハンドラークラスパターン（ACardHandler, TwoCardHandler, etc.）
+- ターン管理: GameEngine 内で currentPlayerIndex を直接管理
+- ドボン演算式: 全組み合わせ試行（システム自動計算、ユーザー選択不要）
+- 返しドボン: タイムアウト付き並行確認（30秒）
+- 勝者決定: 配列順序（最後の要素が最後の宣言者）
+- 倍率: 累積計算（2^n）
+- 山札再生成: 場の最後の1枚（現在の場札）を除く
+- シャッフル: ランダムソート
+- 支払い計算: 専用 PaymentCalculator クラス
+- 無効ドボン: 内部でペナルティ処理、クライアントには false を返す
+**Next Phase**: NFR Requirements for Unit 2
+
+---
+
+## CONSTRUCTION PHASE - Functional Design (Unit 2) - Rule Corrections Applied
+**Timestamp**: 2026-05-02T00:10:00Z
+**User Input**: "business-ruleを読んだのですが、これまでルールとして伝え漏れていたことがあるので伝えます。・特殊カードの2とKは被害者が同じ特殊カードを出した場合、効果を上乗せして次の人に押し付けることができます。・Kのオープンは一度オープンされたカードは場に出されるまでオープンです。次ターン終了時にクローズされる想定で記載されていますが誤りです。・3.5オープンドボンルールはすべてのカードがオープンな時にドボンした場合のことです。一部カードがオープン状態は倍率アップ条件になりえません。・返し待ちの時間は30秒ではなく10秒にしましょう。"
+**AI Response**: 4点の修正を以下のファイルに適用:
+1. **2のスタッキング**: TurnState.forcedDrawPlayerIds → forcedDrawCount（累積枚数）に変更。被害者が2を出すたびに加算、最終被害者が全枚数を引く
+2. **Kのオープン継続**: openHandExpiresAtTurnEnd を削除。公開されたカードは場に出されるまで isPublic = true を維持。スタッキングも対応
+3. **オープンドボン条件**: TurnState.openHandPlayerIds.includes() → player.hand.every(card => card.isPublic === true) に変更。全カードオープン時のみ対象
+4. **タイムアウト**: 30秒 → 10秒
+**Files Updated**:
+- domain-entities.md: TurnState の forcedDrawPlayerIds → forcedDrawCount、openHandExpiresAtTurnEnd 削除、timeoutSeconds 10秒
+- business-logic-model.md: TwoCardHandler（スタッキング）、KCardHandler（スタッキング・クローズなし）、endTurn()（openHandExpires削除）、isOpenDobo（全カード判定）、timeoutAt 10秒
+- business-rules.md: 2.2（スタッキング）、2.5（スタッキング・クローズなし）、3.5（全カードオープン条件）、4.1（10秒）
+- api-contracts.md: timeoutSeconds コメント更新
+**Context**: ゲームルールの伝え漏れによる修正。Functional Design 成果物を更新完了
+
+---
+
+## CONSTRUCTION PHASE - Functional Design (Unit 2) - Stacking Rule Correction
+**Timestamp**: 2026-05-02T00:15:00Z
+**User Input**: "①のスタッキングについてですが、次の人に押し付けるので、最初の被害者はオープンやドローをしなくてよいです。"
+**AI Response**: 2とKのスタッキングルールを修正。押し付けたプレイヤーは効果を完全に回避（ドロー・オープンなし）。
+**Files Updated**:
+- business-rules.md: 2.2（押し付けたプレイヤーはドローしない）、2.5（押し付けたプレイヤーの手札は公開されない）
+- business-logic-model.md: TwoCardHandler、KCardHandler の説明を修正
+**Context**: スタッキング時の被害者の扱いを明確化
+
+---
+
+## CONSTRUCTION PHASE - Functional Design (Unit 2) - Approval
+**Timestamp**: 2026-05-02T00:20:00Z
+**User Input**: "OKです！"
+**AI Response**: Functional Design (Unit 2) を承認。NFR Requirements (Unit 2) に進む。
+**Context**: Functional Design 成果物（domain-entities.md, business-logic-model.md, business-rules.md, api-contracts.md）が確定
+
+---
+
+## CONSTRUCTION PHASE - NFR Requirements (Unit 2) - Plan Created
+**Timestamp**: 2026-05-02T00:25:00Z
+**Status**: Plan created, awaiting user input
+**Output**: aidlc-docs/construction/plans/unit2-backend-nfr-requirements-plan.md
+**Questions**: 16問（8セクション）
+- セクション 1: ランタイム・フレームワーク
+- セクション 2: WebSocket 実装
+- セクション 3: パフォーマンス要件
+- セクション 4: データ管理
+- セクション 5: セキュリティ・認証
+- セクション 6: エラーハンドリング・ログ
+- セクション 7: デプロイ・インフラ
+- セクション 8: テスト戦略
+**Next Step**: User to fill in [Answer]: tags in the plan document
+
+---
+
+## CONSTRUCTION PHASE - NFR Requirements (Unit 2) - Answers Analyzed
+**Timestamp**: 2026-05-02T00:30:00Z
+**User Input**: "回答しました！"
+**AI Response**: 全16問の回答を確認。Q2.2（WebSocket接続管理）でSocket.ioとFirebaseの矛盾を確認。
+**Context**: NFR Requirements プランへの回答完了
+
+---
+
+## CONSTRUCTION PHASE - NFR Requirements (Unit 2) - Q2.2 Clarification
+**Timestamp**: 2026-05-02T00:31:00Z
+**User Input**: "特にわかってないので実現できれば何でもよいです。"
+**AI Response**: Socket.ioのみで統一（Q2.1のA）。Q6.2はコンソール出力のみ（A）で確定。
+**Context**: WebSocket接続管理はSocket.io Room機能で一元管理
+
+---
+
+## CONSTRUCTION PHASE - NFR Requirements (Unit 2) - Artifacts Generated
+**Timestamp**: 2026-05-02T00:35:00Z
+**Status**: Complete
+**Outputs**:
+- aidlc-docs/construction/unit2-backend/nfr-requirements/nfr-requirements.md
+- aidlc-docs/construction/unit2-backend/nfr-requirements/tech-stack-decisions.md
+**Key Decisions**:
+- ランタイム: Node.js 18 LTS + TypeScript（Unit 1 と統一）
+- フレームワーク: Express.js（シンプル、Socket.io と統合容易）
+- WebSocket: Socket.io（Unit 1 と統一、Room機能で接続管理）
+- タイムアウト: setTimeout（セッションごと、シンプル）
+- ログ: コンソール出力のみ（Heroku ダッシュボードで確認）
+- テスト: Jest + ts-jest（ゲームロジック全体を優先）
+- ホスティング: Heroku（WebSocket対応、HTTPS自動、GitHub連携）
+- 認証: なし（POCレベル）
+- 永続化: なし（メモリのみ、再起動でリセット許容）
+**Next Phase**: NFR Design for Unit 2
+
+---
+
+## CONSTRUCTION PHASE - NFR Requirements (Unit 2) - Approval
+**Timestamp**: 2026-05-02T00:40:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: NFR Requirements (Unit 2) を承認。NFR Design (Unit 2) に進む。
+**Context**: nfr-requirements.md, tech-stack-decisions.md が確定
+
+---
+
+## CONSTRUCTION PHASE - NFR Design (Unit 2) - Plan Created
+**Timestamp**: 2026-05-02T00:45:00Z
+**Status**: Plan created, awaiting user input
+**Output**: aidlc-docs/construction/plans/unit2-backend-nfr-design-plan.md
+**Questions**: 8問（5セクション）
+- セクション 1: レジリエンスパターン（2問）
+- セクション 2: スケーラビリティパターン（2問）
+- セクション 3: パフォーマンスパターン（1問）
+- セクション 4: セキュリティパターン（1問）
+- セクション 5: 論理コンポーネント（2問）
+**Next Step**: User to fill in [Answer]: tags in the plan document
+
+---
+
+## CONSTRUCTION PHASE - NFR Design (Unit 2) - Answers Analyzed
+**Timestamp**: 2026-05-02T00:50:00Z
+**User Input**: "回答しました！"
+**AI Response**: 全8問の回答を確認。曖昧な点なし。成果物を生成。
+**Context**: 全回答明確、NFR Design 成果物生成へ
+
+---
+
+## CONSTRUCTION PHASE - NFR Design (Unit 2) - Artifacts Generated
+**Timestamp**: 2026-05-02T00:55:00Z
+**Status**: Complete
+**Outputs**:
+- aidlc-docs/construction/unit2-backend/nfr-design/nfr-design-patterns.md
+- aidlc-docs/construction/unit2-backend/nfr-design/logical-components.md
+**Key Design Decisions**:
+- 再接続: `game:rejoin` イベントで GameState 自動送信
+- エラー処理: ログ + `game:error` 送信 + セッション終了（フェイルファスト）
+- タイムアウト: `setTimeout` セッションごと（10秒）
+- セッション管理: `Map<roomId, GameSession>`
+- Socket.io 接続管理: Room（ブロードキャスト）+ socketPlayerMap（個別送信）の組み合わせ
+- ゲーム状態送信: 全状態を毎回送信（プレイヤーごとにカスタマイズ）
+- CORS: 全オリジン許可（POCレベル）
+- ロガー: クラスベース（ISO timestamp + ログレベル + JSON data）
+**Logical Components**:
+- エントリーポイント: index.ts（Express + Socket.io）
+- Socket.io 層: GameSocketHandler.ts（全イベント一元管理）
+- ゲームロジック層: GameEngine, DoboDeclaration, MultiplierCalculator, DeckManager, CardValidator, PaymentCalculator, 5特殊カードハンドラー
+- ユーティリティ層: Logger
+- テスト層: 4ファクトリー + 5テストファイル
+**Next Phase**: Infrastructure Design for Unit 2
+
+---
+
+## CONSTRUCTION PHASE - NFR Design (Unit 2) - Approval
+**Timestamp**: 2026-05-02T01:00:00Z
+**User Input**: "特にわかってないので実現できれば何でもよいです。" / "Continue to Next Stage"
+**AI Response**: NFR Design (Unit 2) を承認。Infrastructure Design (Unit 2) に進む。
+**Context**: nfr-design-patterns.md, logical-components.md が確定
+
+---
+
+## CONSTRUCTION PHASE - Infrastructure Design (Unit 2) - Plan Created
+**Timestamp**: 2026-05-02T01:05:00Z
+**Status**: Plan created, awaiting user input
+**Output**: aidlc-docs/construction/plans/unit2-backend-infrastructure-design-plan.md
+**Questions**: 3問（2セクション）- 前工程で決定済みの事項が多いため最小限
+**Next Step**: User to fill in [Answer]: tags in the plan document
+
+---
+
+## CONSTRUCTION PHASE - Infrastructure Design (Unit 2) - Answers Analyzed
+**Timestamp**: 2026-05-02T01:10:00Z
+**User Input**: "回答しました！"
+**AI Response**: 全3問の回答を確認。曖昧な点なし。成果物を生成。
+**Context**: Q1.1=A(dobon-backend), Q1.2=A(モノレポ), Q2.1=A(Heroku URL そのまま)
+
+---
+
+## CONSTRUCTION PHASE - Infrastructure Design (Unit 2) - Artifacts Generated
+**Timestamp**: 2026-05-02T01:15:00Z
+**Status**: Complete
+**Outputs**:
+- aidlc-docs/construction/unit2-backend/infrastructure-design/infrastructure-design.md
+- aidlc-docs/construction/unit2-backend/infrastructure-design/deployment-architecture.md
+**Key Infrastructure Decisions**:
+- ホスティング: Heroku Eco Dynos（dobon-backend.herokuapp.com）
+- リポジトリ: モノレポ（frontend/ + backend/）
+- REST API: https://dobon-backend.herokuapp.com/api/...
+- WebSocket: wss://dobon-backend.herokuapp.com
+- セッション管理: メモリのみ（Map<roomId, GameSession>）
+- データベース: Firebase Realtime DB（Unit 1 と共有、ゲーム結果のみ）
+- SSL/TLS: Heroku 自動管理
+- ログ: heroku logs --tail で確認
+- デプロイ: GitHub 連携で自動デプロイ
+**Next Phase**: Code Generation for Unit 2
+
+---
+
+## CONSTRUCTION PHASE - Infrastructure Design (Unit 2) - Approval
+**Timestamp**: 2026-05-02T01:20:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: Infrastructure Design (Unit 2) を承認。Code Generation (Unit 2) に進む。
+**Context**: infrastructure-design.md, deployment-architecture.md が確定
+
+---
+
+## CONSTRUCTION PHASE - Code Generation (Unit 2) - Part 1 (Planning) - Plan Created
+**Timestamp**: 2026-05-02T01:25:00Z
+**Status**: Plan created, awaiting user approval
+**Output**: aidlc-docs/construction/plans/unit2-backend-code-generation-plan.md
+**Plan Summary**: 12 sequential implementation steps:
+1. プロジェクト構造セットアップ
+2. ドメインエンティティ実装
+3. Logger 実装
+4. ゲームロジック（コアクラス: CardValidator, MultiplierCalculator, DeckManager, PaymentCalculator）
+5. 特殊カードハンドラー（A, 2, 8, J, K）
+6. DoboDeclaration（演算式自動計算、返し判定、タイムアウト）
+7. GameEngine（ゲーム初期化、カード操作、ターン管理）
+8. GameSocketHandler（全 Socket.io イベント）
+9. エントリーポイント（Express + Socket.io 初期化）
+10. テストファクトリー
+11. ユニットテスト（5ファイル）
+12. ビルド・デプロイ設定
+**Next Step**: User approval required before proceeding to Code Generation Part 2 (Generation)
+
+---
+
+## CONSTRUCTION PHASE - Code Generation (Unit 2) - Part 1 (Planning) - Approval
+**Timestamp**: 2026-05-02T01:30:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: Code Generation プランを承認。Part 2 (Generation) を開始。
+**Context**: 12ステップの実装計画が確定
+
+---
+
+## CONSTRUCTION PHASE - Code Generation (Unit 2) - Part 2 (Generation) - Started
+**Timestamp**: 2026-05-02T01:30:00Z
+**Status**: Starting Code Generation Part 2
+**First Step**: Step 1 - プロジェクト構造セットアップ
+
+---
