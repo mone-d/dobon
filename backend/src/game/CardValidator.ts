@@ -4,9 +4,12 @@ export class CardValidator {
   /**
    * 出すカードが場札の条件を満たすか検証する
    * 条件: 同じ数字 OR 同じスート OR ワイルド（8）
-   * 複数枚の場合: 全て同じ数字であること
+   * 複数枚の場合:
+   *   - 全て同じ数字であること
+   *   - 一番下のカード（cards[0]）が場札の条件を満たすこと
+   *   - 一番上のカード（cards[cards.length-1]）が次の場札になる
    */
-  validatePlayableCards(cards: Card[], fieldCard: Card): CardValidationResult {
+  validatePlayableCards(cards: Card[], fieldCard: Card, selectedSuit?: string | null): CardValidationResult {
     if (cards.length === 0) {
       return { isValid: false, reason: 'NO_CARDS' };
     }
@@ -20,11 +23,13 @@ export class CardValidator {
       }
     }
 
-    // 先頭カードが場札の条件を満たすか確認
-    const card = cards[0];
-    const isWild = card.value === 8;
-    const isSameValue = card.value === fieldCard.value;
-    const isSameSuit = card.suit === fieldCard.suit;
+    // 一番下のカード（cards[0]）が場札の条件を満たすか確認
+    const bottomCard = cards[0];
+    const isWild = bottomCard.value === 8;
+    const isSameValue = bottomCard.value === fieldCard.value;
+    // selectedSuitがある場合（8のワイルド後）はそのスートで判定
+    const effectiveSuit = selectedSuit || fieldCard.suit;
+    const isSameSuit = bottomCard.suit === effectiveSuit;
 
     if (!isWild && !isSameValue && !isSameSuit) {
       return { isValid: false, reason: 'INVALID_CARD' };

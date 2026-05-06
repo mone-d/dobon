@@ -19,7 +19,7 @@ describe('DoboDeclaration', () => {
     it('加算で正解の場合、成功', () => {
       // 手札: 1, 2, 2 → 1 + 2 + 2 = 5
       const player = PlayerFactory.create('player1');
-      player.hand = CardFactory.createWithValues(['A', '2', '2']);
+      player.hand = CardFactory.createWithValues([1, 2, 2]);
       const fieldCardValue = 5;
 
       // private メソッドをテストするため、別の方法が必要
@@ -30,7 +30,7 @@ describe('DoboDeclaration', () => {
     it('減算で正解の場合、成功', () => {
       // 手札: 10, 3, 2 → 10 - 3 - 2 = 5
       const player = PlayerFactory.create('player1');
-      player.hand = CardFactory.createWithValues(['10', '3', '2']);
+      player.hand = CardFactory.createWithValues([10, 3, 2]);
       const fieldCardValue = 5;
 
       expect(player.hand.length).toBe(3);
@@ -39,7 +39,7 @@ describe('DoboDeclaration', () => {
     it('乗算で正解の場合、成功', () => {
       // 手札: 5, 2, 1 → 5 * 2 * 1 = 10
       const player = PlayerFactory.create('player1');
-      player.hand = CardFactory.createWithValues(['5', '2', 'A']);
+      player.hand = CardFactory.createWithValues([5, 2, 1]);
       const fieldCardValue = 10;
 
       expect(player.hand.length).toBe(3);
@@ -48,7 +48,7 @@ describe('DoboDeclaration', () => {
     it('除算で正解の場合、成功', () => {
       // 手札: 10, 5, 1 → 10 / 5 / 1 = 2
       const player = PlayerFactory.create('player1');
-      player.hand = CardFactory.createWithValues(['10', '5', 'A']);
+      player.hand = CardFactory.createWithValues([10, 5, 1]);
       const fieldCardValue = 2;
 
       expect(player.hand.length).toBe(3);
@@ -57,7 +57,7 @@ describe('DoboDeclaration', () => {
     it('どの演算子でも成功しない場合、失敗', () => {
       // 手札: 2, 3, 4 (いかなる演算でも 5 にならない)
       const player = PlayerFactory.create('player1');
-      player.hand = CardFactory.createWithValues(['2', '3', '4']);
+      player.hand = CardFactory.createWithValues([2, 3, 4]);
       const fieldCardValue = 5;
 
       expect(player.hand.length).toBe(3);
@@ -67,17 +67,22 @@ describe('DoboDeclaration', () => {
   describe('declareDobo', () => {
     it('有効なドボン宣言は成功', () => {
       const player1 = PlayerFactory.create('player1');
-      player1.hand = CardFactory.createWithValues(['A', '2', '2']);
+      player1.hand = CardFactory.createWithValues([1, 2, 2]);
       const player2 = PlayerFactory.create('player2');
       player2.hand = CardFactory.createMany(5);
 
-      const gameState = GameStateFactory.create([player1, player2], CardFactory.create('5'));
+      const gameState = GameStateFactory.create([player1, player2], CardFactory.create(5));
       const session: any = {
         gameState,
+        deckState: {
+          deck: CardFactory.createMany(40),
+          discardPile: [],
+          fieldCard: CardFactory.create(5, 'hearts'),
+          reshuffleCount: 0, selectedSuit: null,
+        },
         turnState: TurnStateFactory.create(['player1', 'player2']),
         multiplierState: MultiplierStateFactory.create(),
         doboPhaseState: DoboPhaseStateFactory.create(),
-        multiplierCalculator: { addDrawDobo: () => {}, addOpenDobo: () => {} },
       };
 
       session.gameState.lastPlayedPlayer = 'player2'; // 他のプレイヤーが出した
@@ -89,11 +94,17 @@ describe('DoboDeclaration', () => {
 
     it('自分のカードへのドボン宣言は失敗（ルール違反）', () => {
       const player1 = PlayerFactory.create('player1');
-      player1.hand = CardFactory.createWithValues(['A', '2', '2']);
+      player1.hand = CardFactory.createWithValues([1, 2, 2]);
 
-      const gameState = GameStateFactory.create([player1], CardFactory.create('5'));
+      const gameState = GameStateFactory.create([player1], CardFactory.create(5));
       const session: any = {
         gameState,
+        deckState: {
+          deck: CardFactory.createMany(40),
+          discardPile: [],
+          fieldCard: CardFactory.create(5, 'hearts'),
+          reshuffleCount: 0, selectedSuit: null,
+        },
         turnState: TurnStateFactory.create(['player1']),
         multiplierState: MultiplierStateFactory.create(),
         doboPhaseState: DoboPhaseStateFactory.create(),

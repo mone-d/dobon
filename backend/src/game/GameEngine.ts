@@ -7,6 +7,7 @@ import {
   TurnState,
   MultiplierState,
   DoboPhaseState,
+  Suit,
 } from '../types/domain';
 import { CardValidator } from './CardValidator';
 import { DeckManager } from './DeckManager';
@@ -17,7 +18,7 @@ import { EightCardHandler } from './handlers/EightCardHandler';
 import { JCardHandler } from './handlers/JCardHandler';
 import { KCardHandler } from './handlers/KCardHandler';
 import { SpecialCardHandler } from './handlers/ACardHandler';
-import { Logger } from '../utils/logger';
+import { logger } from '../utils/logger';
 
 /**
  * GameEngine - ゲーム全体を管理
@@ -31,17 +32,16 @@ import { Logger } from '../utils/logger';
  */
 export class GameEngine {
   private cardValidator = new CardValidator();
-  private deckManager = new DeckManager();
   private multiplierCalculator = new MultiplierCalculator();
-  private logger = new Logger('GameEngine');
+  private deckManager = new DeckManager(this.multiplierCalculator);
 
   // 特殊カードハンドラーのマップ
-  private specialCardHandlers: { [key: string]: SpecialCardHandler } = {
-    'A': new ACardHandler(),
-    '2': new TwoCardHandler(),
-    '8': new EightCardHandler(),
-    'J': new JCardHandler(),
-    'K': new KCardHandler(),
+  private specialCardHandlers: { [key: number]: SpecialCardHandler } = {
+    1: new ACardHandler(),
+    2: new TwoCardHandler(),
+    8: new EightCardHandler(),
+    9: new JCardHandler(),
+    13: new KCardHandler(),
   };
 
   /**
@@ -52,7 +52,6 @@ export class GameEngine {
    * @returns GameSession
    */
   startGame(players: Player[], baseRate: number): GameSession {
-    const logger = this.logger;
     logger.info('Starting game', { playerCount: players.length, baseRate });
 
     // デッキを初期化
@@ -62,16 +61,8 @@ export class GameEngine {
       discardPile: [],
       fieldCard: null as any, // 後で設定
       reshuffleCount: 0,
+      selectedSuit: null,
     };
-
-    // 各プレイヤーに5枚配布
-    for (const player of players) {
-      player.hand = [];
-      for (let i = 0; i < 5; i++) {
-        const card = this.deckManager.drawCard(deckState);
-        player.hand.push(card);
-      }
-    }
 
     // 倍率状態を初期化
     const multiplierState: MultiplierState = {
@@ -83,21 +74,14 @@ export class GameEngine {
       totalMultiplier: 1,
     };
 
-    // 初期場札を決定（A の場合は繰り返す）
-    let fieldCard: Card;
-    while (true) {
-      fieldCard = this.deckManager.drawCard(deckState);
-      if (fieldCard.value === 'A') {
-        // A が出た場合は初期倍率を加算
-        this.multiplierCalculator.addInitialA(multiplierState);
-        logger.info('Initial A drawn, reshuffling');
-        // 再度引く
-      } else {
-        break;
-      }
-    }
+    // 初期場札を決定（TEST_FIXED_FIELD対応、Aの場合は繰り返す）
+    // ※ 手札配布の前に場札を確保する（固定手札と場札が同じ値の場合の競合を防ぐ）
+    const fieldCard = this.deckManager.determineInitialCard(deckState, multiplierState);
 
-    deckState.fieldCard = fieldCard;
+    logger.info('Initial field card determined', { fieldCard: `${fieldCard.value}${fieldCard.suit}`, fixedField: process.env.TEST_FIXED_FIELD || 'none' });
+
+    // 各プレイヤーに5枚配布（TEST_FIXED_HAND対応）
+    this.deckManager.dealCards(players, 5, deckState);
 
     // ターン状態を初期化（ランダムに最初のプレイヤーを決定）
     const randomPlayerIndex = Math.floor(Math.random() * players.length);
@@ -120,10 +104,11 @@ export class GameEngine {
       players,
       multiplier: 1,
       gamePhase: 'playing',
-      deckState,
       doboDeclarations: [],
       returnDoboDeclarations: [],
       lastPlayedPlayer: null,
+      turnOrder: players,
+      turnDirection: 'forward',
     };
 
     // ドボンフェーズ状態を初期化
@@ -131,19 +116,26 @@ export class GameEngine {
       isActive: false,
       firstDoboDeclaration: null as any,
       returnDeclarations: [],
+      noReturnPlayerIds: [],
       pendingPlayerIds: [],
-      timeoutAt: new Date(),
+      timeoutAt: Date.now(),
+      timeoutSeconds: 10,
     };
 
     // GameSession を生成
     const session: GameSession = {
+      sessionId: `session_${Date.now()}`,
+      roomId: '',
       gameState,
       deckState,
       turnState,
       multiplierState,
       doboPhaseState,
-      multiplierCalculator: this.multiplierCalculator,
       baseRate,
+      leaveNextPlayerIds: [],
+      createdAt: Date.now(),
+      startedAt: Date.now(),
+      endedAt: null,
     };
 
     logger.info('Game started', {
@@ -164,8 +156,7 @@ export class GameEngine {
    * @returns true=成功, false=失敗
    */
   playCard(session: GameSession, playerId: string, cards: Card[]): boolean {
-    const { gameState, turnState } = session;
-    const logger = this.logger;
+    const { gameState, turnState, deckState } = session;
 
     // ターン確認：現在のプレイヤーが playerId か確認
     const currentPlayerId = turnState.turnOrder[turnState.currentPlayerIndex];
@@ -175,10 +166,13 @@ export class GameEngine {
     }
 
     // 検証：出すカードが有効か確認
-    if (!this.cardValidator.validatePlayableCards(cards, gameState.deckState.fieldCard)) {
-      logger.debug('Invalid cards', { playerId, cardCount: cards.length });
+    const validationResult = this.cardValidator.validatePlayableCards(cards, deckState.fieldCard, deckState.selectedSuit);
+    if (!validationResult.isValid) {
+      logger.debug('Invalid cards', { playerId, cardCount: cards.length, reason: validationResult.reason, cards: cards.map(c => `${c.value}${c.suit}`), fieldCard: `${deckState.fieldCard.value}${deckState.fieldCard.suit}`, selectedSuit: deckState.selectedSuit });
       return false;
     }
+
+    // 強制ドロー中やK効果保留中の制約はGameSocketHandlerで管理
 
     const player = gameState.players.find((p) => p.id === playerId);
     if (!player) {
@@ -196,24 +190,39 @@ export class GameEngine {
       }
     }
 
-    // 捨札に場札を追加
-    gameState.deckState.discardPile.push(gameState.deckState.fieldCard);
+    // 捨札に場札を追加（公開状態をリセット）
+    deckState.fieldCard.isPublic = false;
+    deckState.discardPile.push(deckState.fieldCard);
 
     // 場札を最後に出したカードに更新
-    gameState.deckState.fieldCard = cards[cards.length - 1];
+    deckState.fieldCard = cards[cards.length - 1];
+    gameState.fieldCard = cards[cards.length - 1];
+    deckState.selectedSuit = null; // スート指定をリセット
 
     // 最後に場札を出したプレイヤーを記録
-    gameState.lastPlayedPlayer = playerId;
+    gameState.lastPlayedPlayer = player;
 
     logger.info('Card played', {
       playerId,
       cardCount: cards.length,
-      fieldCard: `${gameState.deckState.fieldCard.value}${gameState.deckState.fieldCard.suit}`,
+      fieldCard: `${deckState.fieldCard.value}${deckState.fieldCard.suit}`,
     });
 
     // 特殊カード効果を処理
     const lastCard = cards[cards.length - 1];
-    const handler = this.specialCardHandlers[lastCard.value as string];
+    
+    // 2を出して押し付けた場合、自分は強制ドローを回避
+    // （TwoCardHandlerがforcedDrawCountに加算するので、そのまま次のプレイヤーに持ち越し）
+    
+    // Kを出して押し付けた場合、自分はopenHandPlayerIdsから除外（公開は発生しない）
+    if (lastCard.value === 13 && turnState.openHandPlayerIds.includes(playerId)) {
+      turnState.openHandPlayerIds = turnState.openHandPlayerIds.filter(id => id !== playerId);
+      logger.info('K stacking: player avoided open hand', { playerId });
+    }
+    // 注意: カードを出しても isPublic は変更しない
+    // 公開されたカードは場に出されることで手札から消え、自然に解決される
+    
+    const handler = this.specialCardHandlers[lastCard.value];
     if (handler) {
       handler.handle(session, cards.length);
       logger.debug('Special card handler executed', { card: lastCard.value, cardCount: cards.length });
@@ -221,7 +230,6 @@ export class GameEngine {
 
     // バースト判定
     if (player.hand.length >= 14) {
-      player.isBurst = true;
       logger.info('Player burst', { playerId, handSize: player.hand.length });
       this.finalizeGame(session, playerId);
       return true;
@@ -245,7 +253,6 @@ export class GameEngine {
    */
   drawCard(session: GameSession, playerId: string): Card | null {
     const { gameState, deckState, turnState } = session;
-    const logger = this.logger;
 
     // ターン確認
     const currentPlayerId = turnState.turnOrder[turnState.currentPlayerIndex];
@@ -266,18 +273,14 @@ export class GameEngine {
       return null;
     }
 
-    // 山札からカードを引く（山札が空の場合は再生成）
-    let card: Card | null = null;
-    while (!card) {
-      if (deckState.deck.length === 0) {
-        // 山札を再生成（場の最後の1枚を除く）
-        this.deckManager.reshuffleDeck(deckState);
-        turnState.openHandPlayerIds = [];
-        this.multiplierCalculator.addReshuffle(session.multiplierState);
-        logger.info('Deck reshuffled');
-      }
-      card = this.deckManager.drawCard(deckState);
+    // 山札が空の場合はドロー不可
+    if (deckState.deck.length === 0) {
+      logger.warn('Deck empty, cannot draw');
+      this.endTurn(session);
+      return null;
     }
+
+    const card = this.deckManager.drawCard(deckState);
 
     // プレイヤーの手札に追加
     player.hand.push(card);
@@ -288,9 +291,16 @@ export class GameEngine {
 
     logger.info('Card drawn', { playerId, cardValue: card.value });
 
+    // 山札が0枚になったらリシャッフル + 倍率アップ
+    if (deckState.deck.length === 0 && deckState.discardPile.length > 0) {
+      this.deckManager.reshuffleDeck(deckState);
+      this.multiplierCalculator.addReshuffle(session.multiplierState);
+      deckState.reshuffleCount++;
+      logger.info('Deck reshuffled (became empty)', { newDeckSize: deckState.deck.length, multiplier: session.multiplierState.totalMultiplier });
+    }
+
     // バースト判定
     if (player.hand.length >= 14) {
-      player.isBurst = true;
       logger.info('Player burst', { playerId, handSize: player.hand.length });
       this.finalizeGame(session, playerId);
       return card;
@@ -309,14 +319,12 @@ export class GameEngine {
    * @param suit 選択したスート
    */
   selectSuit(session: GameSession, suit: string): void {
-    const logger = this.logger;
-
     if (session.gameState.gamePhase !== 'suit-selection') {
       logger.warn('Not in suit selection phase');
       return;
     }
 
-    session.gameState.deckState.fieldCard.suit = suit;
+    session.deckState.selectedSuit = suit as Suit;
     session.gameState.gamePhase = 'playing';
 
     logger.info('Suit selected', { suit });
@@ -331,8 +339,7 @@ export class GameEngine {
    * @param session ゲームセッション
    */
   endTurn(session: GameSession): void {
-    const { turnState, gameState } = session;
-    const logger = this.logger;
+    const { turnState, gameState, deckState } = session;
 
     // A効果: スキップ処理
     while (turnState.skippedPlayerIds.length > 0) {
@@ -340,37 +347,17 @@ export class GameEngine {
       logger.debug('Player skipped', { playerId: skipPlayerId });
     }
 
-    // 2効果: 強制ドロー処理
+    // 2効果: 次のプレイヤーのターンのdrawCardで適用
+    // （endTurnでは何もしない。GameSocketHandlerが管理）
     if (turnState.forcedDrawCount > 0) {
-      const currentPlayerId = turnState.turnOrder[turnState.currentPlayerIndex];
-      const nextPlayerIndex = this.getNextPlayerIndex(session);
-      const nextPlayerId = turnState.turnOrder[nextPlayerIndex];
-      const nextPlayer = gameState.players.find((p) => p.id === nextPlayerId);
+      turnState.currentPlayerIndex = this.getNextPlayerIndex(session);
+      turnState.hasDrawnThisTurn = false;
+      turnState.drawnCardThisTurn = null;
 
-      if (nextPlayer) {
-        const drawCount = turnState.forcedDrawCount;
-        for (let i = 0; i < drawCount; i++) {
-          if (gameState.deckState.deck.length === 0) {
-            this.deckManager.reshuffleDeck(gameState.deckState);
-            turnState.openHandPlayerIds = [];
-            this.multiplierCalculator.addReshuffle(session.multiplierState);
-          }
-          const card = this.deckManager.drawCard(gameState.deckState);
-          nextPlayer.hand.push(card);
-        }
-
-        logger.info('Forced draw', { playerId: nextPlayerId, count: drawCount });
-
-        // バースト判定
-        if (nextPlayer.hand.length >= 14) {
-          nextPlayer.isBurst = true;
-          this.finalizeGame(session, nextPlayerId);
-          return;
-        }
-      }
-
-      turnState.forcedDrawCount = 0;
-      turnState.hasDrawnThisTurn = true; // 強制ドロー後はターン終了
+      const nextPlayerId = turnState.turnOrder[turnState.currentPlayerIndex];
+      gameState.currentPlayer = gameState.players.find((p) => p.id === nextPlayerId) || gameState.currentPlayer;
+      logger.debug('Turn ended with pending forced draw', { nextPlayer: nextPlayerId, forcedDrawCount: turnState.forcedDrawCount });
+      return;
     }
 
     // 次のプレイヤーに移行
@@ -392,7 +379,7 @@ export class GameEngine {
    */
   private getNextPlayerIndex(session: GameSession): number {
     const { turnState } = session;
-    const activePlayers = session.gameState.players.filter((p) => !p.isBurst);
+    const activePlayers = session.gameState.players;
 
     if (activePlayers.length === 0) {
       return turnState.currentPlayerIndex;
@@ -409,13 +396,55 @@ export class GameEngine {
   }
 
   /**
+   * 強制ドローを適用する（2の効果）
+   */
+  applyForcedDraw(session: GameSession, playerId: string): void {
+    const { turnState, deckState, gameState } = session;
+    const player = gameState.players.find(p => p.id === playerId);
+    if (!player) return;
+
+    const drawCount = turnState.forcedDrawCount;
+    for (let i = 0; i < drawCount; i++) {
+      if (deckState.deck.length === 0) break;
+      const card = this.deckManager.drawCard(deckState);
+      player.hand.push(card);
+      
+      // 山札が0枚になったらリシャッフル + 倍率アップ
+      if (deckState.deck.length === 0 && deckState.discardPile.length > 0) {
+        this.deckManager.reshuffleDeck(deckState);
+        this.multiplierCalculator.addReshuffle(session.multiplierState);
+        deckState.reshuffleCount++;
+        logger.info('Deck reshuffled during forced draw', { newDeckSize: deckState.deck.length, multiplier: session.multiplierState.totalMultiplier });
+      }
+    }
+    logger.info('Forced draw applied', { playerId, count: drawCount });
+    turnState.forcedDrawCount = 0;
+
+    if (player.hand.length >= 14) {
+      this.finalizeGame(session, playerId);
+      return;
+    }
+    this.endTurn(session);
+  }
+
+  /**
+   * 手札公開を適用する（Kの効果）
+   * 現在の手札を公開する。新たに引くカードは非公開のまま。
+   */
+  applyOpenHand(session: GameSession, playerId: string): void {
+    const player = session.gameState.players.find(p => p.id === playerId);
+    if (!player) return;
+    // 現在の手札を公開（新たに引くカードはデフォルトでisPublic=false）
+    player.hand.forEach(card => { card.isPublic = true; });
+    // 保留状態を解除
+    session.turnState.openHandPlayerIds = session.turnState.openHandPlayerIds.filter(id => id !== playerId);
+    logger.info('Open hand applied', { playerId, cardCount: player.hand.length });
+  }
+
+  /**
    * ゲームを終了する（勝者決定）
-   *
-   * @param session ゲームセッション
-   * @param loserId 敗北したプレイヤーID（バースト）
    */
   private finalizeGame(session: GameSession, loserId: string): void {
-    const logger = this.logger;
     logger.info('Game finalized', { loser: loserId });
 
     // GameSocketHandler が game:game-ended イベントを送信

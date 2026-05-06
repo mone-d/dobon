@@ -118,10 +118,11 @@ export interface Ranking {
 // ============================================================
 
 export interface DeckState {
-  drawPile: Card[];
+  deck: Card[];
   discardPile: Card[];
   fieldCard: Card;
   reshuffleCount: number;
+  selectedSuit: Suit | null; // 8のワイルドカードで選択されたスート
 }
 
 export interface TurnState {
@@ -186,20 +187,21 @@ export interface DoboValidationResult {
 // クライアントに送信する GameState（手札情報をプレイヤーごとにカスタマイズ）
 export interface PlayerForClient {
   id: string;
-  user: User;
+  name: string; // Simplified: user.userName only
   handCount: number;
-  hand: Card[]; // 自分: 全カード / 他: isPublic=true のカードのみ
-  isCurrentPlayer: boolean;
+  hand?: Card[]; // Optional: 自分のみ手札が見える
+  isCurrentPlayer?: boolean; // Optional: 現在のターンプレイヤーかどうか
 }
 
 export interface GameStateForClient {
   gameId: string;
-  currentPlayer: { id: string; user: User };
+  currentPlayer: { id: string; name: string }; // Simplified player
   fieldCard: Card;
   players: PlayerForClient[];
   multiplier: number;
   gamePhase: GamePhase;
-  lastPlayedPlayer: { id: string; user: User } | null;
+  lastPlayedPlayer: { id: string; name: string } | null; // Simplified player
   turnOrder: string[];
   turnDirection: TurnDirection;
+  deckRemaining: number; // 山札の残り枚数
 }

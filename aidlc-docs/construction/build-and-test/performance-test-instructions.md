@@ -1,515 +1,343 @@
 # Performance Test Instructions
 
-## Overview
+## Purpose
 
-Dobonゲームの各ユニットとシステム全体のパフォーマンス特性をテストします。
-
----
-
-## Performance Test Strategy
-
-### Test Scope
-
-| テスト項目 | 対象 | 測定項目 |
-|-----------|------|--------|
-| Load Testing | バックエンド | 同時プレイヤー数 | レスポンス時間 |
-| Stress Testing | WebSocket | メッセージ処理率 | メモリ使用量 |
-| Endurance Testing | フロントエンド | 長時間使用での安定性 |
-| Spike Testing | システム全体 | 瞬間的な負荷変動への対応 |
+システムが負荷下で要求されるパフォーマンス要件を満たすことを検証します。
 
 ---
 
-## Prerequisites
+## Performance Requirements
 
-### ツール導入
+### Response Time
+- **WebSocket接続**: < 100ms
+- **カード操作（play-card）**: < 50ms
+- **ドボン宣言（declare-dobo）**: < 100ms
+- **ゲーム状態更新**: < 50ms
 
+### Throughput
+- **同時接続数**: 100接続以上
+- **イベント処理**: 1000イベント/秒以上
+
+### Concurrent Users
+- **同時プレイヤー数**: 100人以上（25ゲーム × 4人）
+- **同時ゲーム数**: 25ゲーム以上
+
+### Error Rate
+- **許容エラー率**: < 1%
+- **タイムアウト率**: < 0.5%
+
+---
+
+## Current Status
+
+**⚠️ Performance Tests: PENDING**
+
+現時点ではパフォーマンステストは実装されていません。以下は将来の実装計画です。
+
+---
+
+## Setup Performance Test Environment (将来の実装)
+
+### 1. Prepare Test Environment
+
+#### Backend Scaling
 ```bash
-# Apache JMeter (負荷テスト)
-# または: npm install -D artillery autocannon
-
-npm install -D autocannon
-
-# メモリプロファイラー
-npm install -D clinic
-
-# ベンチマーク
-npm install -D benchmark
-```
-
-### 環境準備
-
-- **メモリ**: 2GB 以上
-- **CPU**: 2 コア以上
-- **ネットワーク**: 安定した接続
-- **テスト環境**: 本番相似
-
----
-
-## Step 1: API応答時間テスト
-
-### 1.1 バックエンド API レスポンス時間
-
-**テストコード** (`backend/src/api.performance.test.ts`):
-
-```typescript
-import autocannon from 'autocannon';
-
-describe('API Performance', () => {
-  it('should respond within 100ms for room creation', async () => {
-    const result = await autocannon({
-      url: 'http://localhost:3000/api/rooms',
-      connections: 10,
-      pipelining: 1,
-      duration: 30,
-      requests: [
-        {
-          method: 'POST',
-          path: '/api/rooms',
-          body: JSON.stringify({
-            roomName: 'TestRoom',
-            creatorId: 'user1',
-            creatorName: 'Player1'
-          })
-        }
-      ]
-    });
-
-    // 平均応答時間 < 100ms
-    expect(result.latency.mean).toBeLessThan(100);
-    
-    // P99 応答時間 < 500ms
-    expect(result.latency.p99).toBeLessThan(500);
-    
-    // エラーレート = 0%
-    expect(result.errors).toBe(0);
-  });
-});
-```
-
-**実行**:
-```bash
+# 本番環境に近い設定でバックエンドを起動
 cd backend
-npm run test:performance -- api.performance.test.ts
+NODE_ENV=production npm start
 ```
 
-**期待される結果**:
-```
-┌─────────────────────────────────────────────┐
-│ Requests: 3000, Throughput: 100 req/sec   │
-├─────────────────────────────────────────────┤
-│ Avg Latency:   45ms                        │
-│ Min Latency:   12ms                        │
-│ Max Latency:   180ms                       │
-│ P99 Latency:   120ms                       │
-├─────────────────────────────────────────────┤
-│ Errors: 0                                   │
-│ Timeouts: 0                                 │
-└─────────────────────────────────────────────┘
+#### Load Balancer Configuration (Heroku)
+```bash
+# Herokuで複数dynoを起動
+heroku ps:scale web=2 -a dobon-backend
 ```
 
 ---
 
-## Step 2: WebSocket スループット テスト
+### 2. Configure Test Parameters
 
-### 2.1 メッセージ処理速度
+#### Load Test Configuration
+- **Test Duration**: 5分
+- **Ramp-up Time**: 30秒
+- **Virtual Users**: 100ユーザー
+- **Think Time**: 1-3秒（ユーザー操作間の待機時間）
 
-**テストコード** (`backend/src/socket/performance.integration.test.ts`):
-
-```typescript
-describe('WebSocket Performance', () => {
-  it('should handle 1000 messages per second', async () => {
-    const client = io('http://localhost:3000');
-    let messagesReceived = 0;
-    let startTime: number;
-
-    client.on('game:update', () => {
-      messagesReceived++;
-    });
-
-    await new Promise(resolve => {
-      client.on('connect', () => {
-        startTime = Date.now();
-        
-        // 1秒間に1000メッセージを送信
-        for (let i = 0; i < 1000; i++) {
-          client.emit('game:ping', { id: i });
-        }
-
-        setTimeout(() => {
-          const duration = (Date.now() - startTime) / 1000;
-          const throughput = messagesReceived / duration;
-          
-          console.log(`Throughput: ${throughput.toFixed(0)} msg/sec`);
-          expect(throughput).toBeGreaterThan(800); // 80% 以上の応答
-          resolve(true);
-        }, 2000);
-      });
-    });
-  });
-
-  it('should maintain < 50ms latency under load', async () => {
-    const latencies: number[] = [];
-    
-    const client = io('http://localhost:3000');
-
-    client.on('game:pong', (data) => {
-      const latency = Date.now() - data.timestamp;
-      latencies.push(latency);
-    });
-
-    await new Promise(resolve => {
-      let sent = 0;
-      const interval = setInterval(() => {
-        client.emit('game:ping', { timestamp: Date.now(), id: sent++ });
-        
-        if (sent >= 100) {
-          clearInterval(interval);
-          resolve(true);
-        }
-      }, 10); // 100ms で 100 メッセージ = 1000 msg/sec
-    });
-
-    const avgLatency = latencies.reduce((a, b) => a + b) / latencies.length;
-    expect(avgLatency).toBeLessThan(50);
-  });
-});
-```
-
-**実行**:
-```bash
-cd backend
-npm run test:performance -- socket/performance.integration.test.ts
-```
+#### Stress Test Configuration
+- **Test Duration**: 10分
+- **Ramp-up Time**: 2分
+- **Virtual Users**: 10 → 200ユーザー（段階的に増加）
+- **Think Time**: 1-3秒
 
 ---
 
-## Step 3: メモリ使用量テスト
+## Run Performance Tests (将来の実装)
 
-### 3.1 メモリリーク検出
+### Tool Options
 
-**テストコード**:
-
-```typescript
-import * as clinic from 'clinic';
-
-describe('Memory Performance', () => {
-  it('should not leak memory during 1000 game cycles', async () => {
-    const doctor = new clinic.Doctor();
-
-    // メモリプロファイル開始
-    doctor.collect(async () => {
-      for (let i = 0; i < 1000; i++) {
-        // ゲームサイクル 1 回
-        const room = await createGameRoom(`room${i}`);
-        await simulateGamePlay(room);
-        await deleteGameRoom(room.id);
-      }
-    });
-
-    const report = await doctor.report();
-    
-    // メモリ使用量増加 < 100MB
-    expect(report.memoryGrowth).toBeLessThan(100 * 1024 * 1024);
-  });
-});
-```
-
-**実行（コマンドラインから）**:
-```bash
-cd backend
-clinic doctor -- npm run dev
-# ブラウザで http://localhost:3000 にアクセス、ゲームプレイ
-# プロセス終了後にレポート生成
-```
-
-### 3.2 メモリプロファイラー（Node.js built-in）
+#### Option 1: Artillery (推奨)
+WebSocketとHTTPの両方をサポート
 
 ```bash
-cd backend
-node --prof src/index.ts
+# Artilleryをインストール
+npm install -g artillery
 
-# ゲームをプレイ後、Ctrl+C で終了
+# テストスクリプトを作成
+cat > artillery-test.yml << EOF
+config:
+  target: "ws://localhost:3000"
+  phases:
+    - duration: 300
+      arrivalRate: 20
+      name: "Load test"
+  engines:
+    socketio: {}
 
-# プロファイルレポート生成
-node --prof-process isolate-*.log > profile-summary.txt
+scenarios:
+  - name: "Game Flow"
+    engine: socketio
+    flow:
+      - emit:
+          channel: "game:start"
+          data:
+            roomId: "test-room"
+            players: []
+            baseRate: 100
+      - think: 2
+      - emit:
+          channel: "game:play-card"
+          data:
+            roomId: "test-room"
+            playerId: "player1"
+            cards: []
+      - think: 1
+EOF
 
-# レポート確認
-cat profile-summary.txt | head -50
-```
-
-**期待される出力**:
-```
-Statistical profiling result from isolate-xxxxx, (10192 ticks, ...)
- [Shared objects]
-  ticks  total  nonlib   name
-  1234   12.1%        C++ code
-```
-
----
-
-## Step 4: CPU 使用率テスト
-
-### 4.1 CPU プロファイリング
-
-**テストコード**:
-
-```typescript
-describe('CPU Performance', () => {
-  it('should not exceed 50% CPU for 100 concurrent games', async () => {
-    const cpuMonitor = new CPUMonitor();
-    cpuMonitor.start();
-
-    // 100 並行ゲーム作成
-    const games = Array.from({ length: 100 }, (_, i) =>
-      createAndPlayGame(`game${i}`)
-    );
-
-    await Promise.all(games);
-
-    const avgCpuUsage = cpuMonitor.getAverageCpuUsage();
-    cpuMonitor.stop();
-
-    console.log(`Average CPU usage: ${avgCpuUsage}%`);
-    expect(avgCpuUsage).toBeLessThan(50);
-  });
-});
-```
-
-**実行**:
-```bash
-cd backend
-npm run test:performance -- cpu.performance.test.ts
+# テストを実行
+artillery run artillery-test.yml
 ```
 
 ---
 
-## Step 5: スケーラビリティ テスト
-
-### 5.1 同時ユーザー数での負荷テスト
-
-**テストコード**:
-
-```typescript
-describe('Scalability', () => {
-  it('should support 50 concurrent players', async () => {
-    const players = Array.from({ length: 50 }, (_, i) => ({
-      id: `player${i}`,
-      name: `Player${i}`
-    }));
-
-    const room = await createRoom('scalability-test', 50);
-    
-    // 全プレイヤーが同時接続
-    const connections = players.map(player =>
-      connectPlayer(player, room.id)
-    );
-
-    await Promise.all(connections);
-
-    // ゲーム開始
-    const gameResult = await startGame(room.id);
-
-    expect(gameResult.success).toBe(true);
-    expect(gameResult.playerCount).toBe(50);
-    expect(gameResult.avgLatency).toBeLessThan(500); // 平均500ms以下
-  });
-
-  it('should handle 100 room instances simultaneously', async () => {
-    const rooms = Array.from({ length: 100 }, (_, i) =>
-      createRoom(`room${i}`, 4)
-    );
-
-    const createdRooms = await Promise.all(rooms);
-
-    expect(createdRooms.filter(r => r.success).length).toBe(100);
-    expect(createdRooms.filter(r => !r.success).length).toBe(0);
-  });
-});
-```
-
----
-
-## Step 6: エンデュランス テスト（長時間実行）
-
-### 6.1 24 時間ゲーム運用テスト
-
-**テストシナリオ**:
+#### Option 2: k6
+高性能な負荷テストツール
 
 ```bash
-# テスト実行スクリプト (endurance-test.sh)
-#!/bin/bash
+# k6をインストール
+brew install k6  # macOS
 
-START_TIME=$(date +%s)
-DURATION=$((24 * 60 * 60)) # 24 hours
+# テストスクリプトを作成
+cat > k6-test.js << EOF
+import ws from 'k6/ws';
+import { check } from 'k6';
 
-while true; do
-  CURRENT_TIME=$(date +%s)
-  ELAPSED=$((CURRENT_TIME - START_TIME))
-  
-  if [ $ELAPSED -gt $DURATION ]; then
-    break
-  fi
-  
-  # 1 時間ごとにゲームを実行
-  npm run test:game-simulation
-  
-  # メモリ使用量ログ
-  free -h >> memory-log.txt
-  
-  sleep 3600 # 1 hour
-done
+export let options = {
+  stages: [
+    { duration: '30s', target: 50 },
+    { duration: '5m', target: 100 },
+    { duration: '30s', target: 0 },
+  ],
+};
+
+export default function () {
+  const url = 'ws://localhost:3000';
+  const params = { tags: { my_tag: 'websocket' } };
+
+  const res = ws.connect(url, params, function (socket) {
+    socket.on('open', () => {
+      socket.send(JSON.stringify({
+        event: 'game:start',
+        data: { roomId: 'test', players: [], baseRate: 100 }
+      }));
+    });
+
+    socket.on('message', (data) => {
+      console.log('Message received: ', data);
+    });
+
+    socket.setTimeout(() => {
+      socket.close();
+    }, 5000);
+  });
+
+  check(res, { 'status is 101': (r) => r && r.status === 101 });
+}
+EOF
+
+# テストを実行
+k6 run k6-test.js
 ```
-
-**モニタリング項目**:
-- メモリ使用量（安定性）
-- CPU 使用率（異常上昇なし）
-- エラーログ（なし）
-- 応答時間（増加傾向なし）
 
 ---
 
-## Step 7: フロントエンド レンダリング パフォーマンス
+### 1. Execute Load Tests
 
-### 7.1 Vue コンポーネント レンダリング速度
+#### Purpose
+通常の負荷下でのパフォーマンスを測定
 
-**テストコード** (`tests/performance/rendering.test.ts`):
-
-```typescript
-import { mount } from '@vue/test-utils';
-import GameBoard from '@/components/GameBoard.vue';
-
-describe('Frontend Rendering Performance', () => {
-  it('should render 100 cards in < 100ms', async () => {
-    const startTime = performance.now();
-    
-    const wrapper = mount(GameBoard, {
-      props: {
-        cards: Array.from({ length: 100 }, (_, i) => ({
-          id: `card${i}`,
-          rank: 'A',
-          suit: 'hearts'
-        }))
-      }
-    });
-
-    const endTime = performance.now();
-    const renderTime = endTime - startTime;
-
-    console.log(`Render time: ${renderTime}ms`);
-    expect(renderTime).toBeLessThan(100);
-  });
-
-  it('should update 50 cards in < 50ms', async () => {
-    const wrapper = mount(GameBoard, {
-      props: {
-        cards: Array.from({ length: 50 }, (_, i) => ({
-          id: `card${i}`,
-          rank: 'A',
-          suit: 'hearts'
-        }))
-      }
-    });
-
-    const startTime = performance.now();
-    
-    // 全カードを更新
-    await wrapper.setProps({
-      cards: Array.from({ length: 50 }, (_, i) => ({
-        id: `card${i}`,
-        rank: 'K',
-        suit: 'spades'
-      }))
-    });
-
-    const endTime = performance.now();
-    expect(endTime - startTime).toBeLessThan(50);
-  });
-});
-```
-
-**実行**:
 ```bash
-npm run test:performance -- rendering.test.ts
+# Artilleryでロードテストを実行
+artillery run artillery-test.yml --output load-test-results.json
+
+# レポートを生成
+artillery report load-test-results.json
 ```
+
+**Expected Metrics**:
+- **Response Time (p95)**: < 100ms
+- **Response Time (p99)**: < 200ms
+- **Throughput**: > 1000 req/s
+- **Error Rate**: < 1%
 
 ---
 
-## Step 8: パフォーマンス テスト結果総括
+### 2. Execute Stress Tests
 
-### チェックリスト
+#### Purpose
+システムの限界を特定
 
-- [ ] API応答時間 < 100ms
-- [ ] WebSocket スループット > 800 msg/sec
-- [ ] メモリリーク検出 = なし
-- [ ] CPU使用率 < 50%
-- [ ] 同時50ユーザー対応
-- [ ] 100ルーム同時稼働
-- [ ] フロントエンド レンダリング < 100ms
-- [ ] エラー率 = 0%
+```bash
+# 段階的に負荷を増加させるストレステスト
+artillery run artillery-stress-test.yml --output stress-test-results.json
 
-### パフォーマンス レポート テンプレート
-
-```markdown
-## Performance Test Report
-
-### 実行日時
-- **Date**: 2026-05-02
-- **Environment**: Development
-- **Duration**: 2 hours
-
-### API Performance
-- Average Response Time: 45ms
-- P99 Response Time: 120ms
-- Throughput: 100 req/sec
-- Error Rate: 0%
-
-### WebSocket Performance
-- Message Throughput: 950 msg/sec
-- Average Latency: 35ms
-- Max Latency: 180ms
-
-### Resource Usage
-- Memory (Peak): 250MB
-- Memory (Average): 180MB
-- Memory Leak: None
-- CPU (Average): 25%
-- CPU (Peak): 45%
-
-### Scalability
-- Max Concurrent Players: 50
-- Max Room Instances: 100
-- Average Latency at Scale: 350ms
-
-### Frontend Performance
-- Card Render Time: 75ms
-- Update Time (50 cards): 35ms
-
-### Conclusion
-✅ All performance targets met
-✅ System ready for production
+# レポートを生成
+artillery report stress-test-results.json
 ```
+
+**Expected Behavior**:
+- システムが段階的な負荷増加に対応
+- エラー率が許容範囲内
+- リソース使用率が監視可能
 
 ---
 
-## トラブルシューティング
+### 3. Analyze Performance Results
 
-### Performance tests timeout
-
-**解決策**:
-```typescript
-jest.setTimeout(60000); // 60秒
+#### Response Time Analysis
+```
+Metrics:
+  - Response Time (min): XXms
+  - Response Time (median): XXms
+  - Response Time (p95): XXms
+  - Response Time (p99): XXms
+  - Response Time (max): XXms
 ```
 
-### Memory usage grows excessively
+**Target vs Actual**:
+- **Target p95**: < 100ms
+- **Actual p95**: [測定値]
+- **Status**: [Pass/Fail]
 
-**解決策**:
-- メモリリークテストを実行
-- garbage collection の明示的呼び出しを確認
-- 接続/セッションの適切なクリーンアップ
+---
 
-### CPU spikes detected
+#### Throughput Analysis
+```
+Metrics:
+  - Requests/sec (mean): XXX
+  - Requests/sec (max): XXX
+  - Total requests: XXXX
+```
 
-**解決策**:
-- CPU プロファイリングでボトルネック特定
-- 不要なループや計算の最適化
+**Target vs Actual**:
+- **Target**: > 1000 req/s
+- **Actual**: [測定値]
+- **Status**: [Pass/Fail]
 
+---
+
+#### Error Rate Analysis
+```
+Metrics:
+  - Total errors: XX
+  - Error rate: X.XX%
+  - Timeout errors: XX
+  - Connection errors: XX
+```
+
+**Target vs Actual**:
+- **Target**: < 1%
+- **Actual**: [測定値]
+- **Status**: [Pass/Fail]
+
+---
+
+#### Bottleneck Identification
+
+パフォーマンステスト中に以下を監視:
+- **CPU使用率**: `top` または `htop`
+- **メモリ使用率**: `free -m`
+- **ネットワークI/O**: `iftop`
+- **ディスクI/O**: `iotop`
+
+**Common Bottlenecks**:
+- WebSocket接続数の上限
+- メモリリーク
+- データベースクエリの遅延
+- ネットワーク帯域幅
+
+---
+
+## Performance Optimization
+
+パフォーマンスが要件を満たさない場合:
+
+### 1. Identify Bottlenecks
+- プロファイリングツールを使用（Node.js Profiler, Chrome DevTools）
+- ログから遅い処理を特定
+- リソース使用率を確認
+
+### 2. Optimize Code
+- **非効率なループ**: O(n²) → O(n)
+- **不要なデータコピー**: 参照渡しを使用
+- **同期処理**: 非同期処理に変更
+
+### 3. Optimize Queries
+- インデックスの追加
+- クエリの最適化
+- キャッシュの導入
+
+### 4. Scale Infrastructure
+- Heroku dynoの増加
+- Redis導入（セッション管理）
+- CDN導入（静的ファイル配信）
+
+### 5. Rerun Tests
+最適化後、パフォーマンステストを再実行して改善を検証
+
+---
+
+## Performance Test Checklist
+
+### Prerequisites
+- [ ] Unit 1 (Frontend) のコード生成が完了
+- [ ] Unit 2 (Backend) のビルドが成功
+- [ ] 統合テストが成功
+
+### Test Execution
+- [ ] ロードテストが実行された
+- [ ] ストレステストが実行された
+- [ ] パフォーマンスメトリクスが収集された
+
+### Results Analysis
+- [ ] レスポンスタイムが要件を満たす
+- [ ] スループットが要件を満たす
+- [ ] エラー率が許容範囲内
+- [ ] ボトルネックが特定された（該当する場合）
+
+---
+
+## Results Location
+
+パフォーマンステスト結果は以下に保存:
+- **Artillery**: `load-test-results.json`, `stress-test-results.json`
+- **k6**: `k6-results.json`
+- **Reports**: `performance-reports/`
+
+---
+
+## Next Steps
+
+パフォーマンステストが完了したら:
+1. Build and Test Summary - `build-and-test-summary.md` を確認
+2. 必要に応じて最適化を実施
+3. Operations フェーズに進む準備

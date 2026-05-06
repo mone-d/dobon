@@ -28,7 +28,7 @@
 
 ## Code Generation 計画
 
-### [ ] Step 1: プロジェクト構造セットアップ
+### [x] Step 1: プロジェクト構造セットアップ
 
 **参照ドキュメント**:
 - `tech-stack-decisions.md`
@@ -44,13 +44,13 @@
 - ディレクトリ構造作成（src/, tests/）
 
 **検証項目**:
-- [ ] 依存ライブラリが tech-stack-decisions.md と一致
-- [ ] TypeScript strict mode が有効
-- [ ] Procfile が正しく設定されている
+- [x] 依存ライブラリが tech-stack-decisions.md と一致
+- [x] TypeScript strict mode が有効
+- [x] Procfile が正しく設定されている
 
 ---
 
-### [ ] Step 2: ドメインエンティティ実装
+### [x] Step 2: ドメインエンティティ実装
 
 **参照ドキュメント**:
 - `domain-entities.md` ⚠️ **CRITICAL - 全エンティティを厳密に実装**
@@ -61,14 +61,14 @@
   - バックエンド専用: DeckState, TurnState, MultiplierState, DoboPhaseState, GameSession, CardValidationResult, DoboValidationResult
 
 **検証項目**:
-- [ ] 全エンティティが domain-entities.md と完全一致
-- [ ] TurnState に forcedDrawCount（スタッキング対応）が含まれる
-- [ ] TurnState に openHandExpiresAtTurnEnd が含まれない（削除済み）
-- [ ] DoboPhaseState.timeoutSeconds が 10秒
+- [x] 全エンティティが domain-entities.md と完全一致
+- [x] TurnState に forcedDrawCount（スタッキング対応）が含まれる
+- [x] TurnState に openHandExpiresAtTurnEnd が含まれない（削除済み）
+- [x] DoboPhaseState.timeoutSeconds が 10秒
 
 ---
 
-### [ ] Step 3: Logger 実装
+### [x] Step 3: Logger 実装
 
 **参照ドキュメント**:
 - `nfr-design-patterns.md` Section 5.1
@@ -77,13 +77,13 @@
 - `backend/src/utils/logger.ts` - クラスベースロガー
 
 **検証項目**:
-- [ ] ISO 8601 タイムスタンプ付き
-- [ ] ログレベル（debug/info/warn/error）対応
-- [ ] JSON データ付加対応
+- [x] ISO 8601 タイムスタンプ付き
+- [x] ログレベル（debug/info/warn/error）対応
+- [x] JSON データ付加対応
 
 ---
 
-### [ ] Step 4: ゲームロジック実装（コアクラス）
+### [x] Step 4: ゲームロジック実装（コアクラス）
 
 **参照ドキュメント**:
 - `business-logic-model.md` ⚠️ **CRITICAL**
@@ -103,14 +103,14 @@
 - PaymentCalculator: ドボン/バースト/ペナルティの3パターン
 
 **検証項目**:
-- [ ] CardValidator の全検証ケースが business-rules.md と一致
-- [ ] MultiplierCalculator の倍率計算が正確（2^n）
-- [ ] DeckManager の山札再生成ルールが正確（場の最後の1枚を除く）
-- [ ] PaymentCalculator の支払い計算が正確
+- [x] CardValidator の全検証ケースが business-rules.md と一致
+- [x] MultiplierCalculator の倍率計算が正確（2^n）
+- [x] DeckManager の山札再生成ルールが正確（場の最後の1枚を除く）
+- [x] PaymentCalculator の支払い計算が正確
 
 ---
 
-### [ ] Step 5: 特殊カードハンドラー実装
+### [x] Step 5: 特殊カードハンドラー実装
 
 **参照ドキュメント**:
 - `business-logic-model.md` Section 1.4
@@ -128,13 +128,13 @@
 - KCardHandler: 押し付けたプレイヤーの手札は公開されない、カードが場に出されるまでオープン継続
 
 **検証項目**:
-- [ ] 2のスタッキング: 押し付けたプレイヤーはドローしない
-- [ ] Kのスタッキング: 押し付けたプレイヤーの手札は公開されない
-- [ ] Kのオープン: ターン終了でクローズされない（カードが場に出されるまで）
+- [x] 2のスタッキング: 押し付けたプレイヤーはドローしない
+- [x] Kのスタッキング: 押し付けたプレイヤーの手札は公開されない
+- [x] Kのオープン: ターン終了でクローズされない（カードが場に出されるまで）
 
 ---
 
-### [ ] Step 6: DoboDeclaration 実装
+### [x] Step 6: DoboDeclaration 実装
 
 **参照ドキュメント**:
 - `business-logic-model.md` Section 2
@@ -150,14 +150,14 @@
 - 勝者決定: returnDeclarations の配列末尾（最後に宣言したプレイヤー）
 
 **検証項目**:
-- [ ] 演算式自動計算が正確（4演算子試行）
-- [ ] タイムアウトが 10秒
-- [ ] 勝者決定ロジックが配列順序で判定
-- [ ] 「返さない」宣言が他プレイヤーに通知されない
+- [x] 演算式自動計算が正確（4演算子試行）
+- [x] タイムアウトが 10秒
+- [x] 勝者決定ロジックが配列順序で判定
+- [x] 「返さない」宣言が他プレイヤーに通知されない
 
 ---
 
-### [ ] Step 7: GameEngine 実装
+### [x] Step 7: GameEngine 実装
 
 **参照ドキュメント**:
 - `business-logic-model.md` Section 1
@@ -173,14 +173,14 @@
 - バースト判定: 手札 14 枚で即敗北
 
 **検証項目**:
-- [ ] ゲーム初期化フローが business-logic-model.md と一致
-- [ ] カード操作フローが正確
-- [ ] ターン管理（スキップ、強制ドロー、リバース）が正確
-- [ ] バースト判定が正確（14枚）
+- [x] ゲーム初期化フローが business-logic-model.md と一致
+- [x] カード操作フローが正確
+- [x] ターン管理（スキップ、強制ドロー、リバース）が正確
+- [x] バースト判定が正確（14枚）
 
 ---
 
-### [ ] Step 8: GameSocketHandler 実装
+### [x] Step 8: GameSocketHandler 実装
 
 **参照ドキュメント**:
 - `api-contracts.md`
@@ -199,14 +199,14 @@
 - game:rejoin: 再接続時の GameState 送信
 
 **検証項目**:
-- [ ] 全イベントが api-contracts.md と一致
-- [ ] 手札情報が自分のみ全て、他は isPublic=true のみ
-- [ ] エラー時に game:error を送信してセッション終了
-- [ ] 「返さない」宣言が他プレイヤーに通知されない
+- [x] 全イベントが api-contracts.md と一致
+- [x] 手札情報が自分のみ全て、他は isPublic=true のみ
+- [x] エラー時に game:error を送信してセッション終了
+- [x] 「返さない」宣言が他プレイヤーに通知されない
 
 ---
 
-### [ ] Step 9: エントリーポイント実装
+### [x] Step 9: エントリーポイント実装
 
 **参照ドキュメント**:
 - `logical-components.md` Section 1
@@ -217,13 +217,13 @@
 - REST API エンドポイント（再接続用）
 
 **検証項目**:
-- [ ] CORS が全オリジン許可
-- [ ] ポートが process.env.PORT || 3000
-- [ ] Socket.io が正しく初期化されている
+- [x] CORS が全オリジン許可
+- [x] ポートが process.env.PORT || 3000
+- [x] Socket.io が正しく初期化されている
 
 ---
 
-### [ ] Step 10: テストファクトリー実装
+### [x] Step 10: テストファクトリー実装
 
 **参照ドキュメント**:
 - `business-rules.md` Section 9.3
@@ -236,11 +236,11 @@
 - `backend/tests/factories/DeckStateFactory.ts`
 
 **検証項目**:
-- [ ] ファクトリーが domain-entities.md のエンティティを正確に生成
+- [x] ファクトリーが domain-entities.md のエンティティを正確に生成
 
 ---
 
-### [ ] Step 11: ユニットテスト実装
+### [x] Step 11: ユニットテスト実装
 
 **参照ドキュメント**:
 - `business-rules.md` Section 9
@@ -261,12 +261,12 @@
 - DeckManager: デッキ初期化、山札再生成（場の最後の1枚を除く）
 
 **検証項目**:
-- [ ] 全テストが pass
-- [ ] 境界値テスト（手札14枚、倍率計算）が含まれる
+- [x] 全テストが pass
+- [x] 境界値テスト（手札14枚、倍率計算）が含まれる
 
 ---
 
-### [ ] Step 12: ビルド・デプロイ設定
+### [x] Step 12: ビルド・デプロイ設定
 
 **参照ドキュメント**:
 - `deployment-architecture.md`
@@ -277,9 +277,9 @@
 - `backend/README.md` - セットアップ手順
 
 **検証項目**:
-- [ ] `npm run build` が成功する
-- [ ] `npm run test` が全テスト pass
-- [ ] TypeScript エラーがない
+- [x] `npm run build` が成功する
+- [x] `npm run test` が全テスト pass
+- [x] TypeScript エラーがない
 
 ---
 

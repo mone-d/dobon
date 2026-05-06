@@ -1,5 +1,5 @@
-import { GameSession, DoboDeclaration as DoboDeclarationType, ReturnDoboDeclaration, Card } from '../types/domain';
-import { Logger } from '../utils/logger';
+import { GameSession, DoboDeclarationEntity, ReturnDoboDeclaration, Card } from '../types/domain';
+import { logger } from '../utils/logger';
 
 /**
  * DoboDeclaration - ドボン宣言管理
@@ -11,8 +11,6 @@ import { Logger } from '../utils/logger';
  * - ドボンフェーズ終了判定・勝者決定
  */
 export class DoboDeclarationService {
-  private logger = new Logger('DoboDeclaration');
-
   /**
    * ドボン宣言（最初のドボン）
    *
@@ -22,8 +20,7 @@ export class DoboDeclarationService {
    * @returns true=成功, false=失敗（ペナルティ適用）
    */
   declareDobo(session: GameSession, playerId: string, lastPlayedPlayerId: string): boolean {
-    const { gameState, doboPhaseState, multiplierCalculator } = session;
-    const logger = this.logger;
+    const { gameState, doboPhaseState, deckState } = session;
 
     // ドボンフェーズが既に存在するか確認
     if (doboPhaseState.isActive) {
@@ -42,7 +39,7 @@ export class DoboDeclarationService {
     const isRuleViolation = playerId === lastPlayedPlayerId;
 
     // 演算式の自動計算を試行
-    const formula = this.validateDoboFormula(player.hand, gameState.deckState.fieldCard.value);
+    const formula = this.validateDoboFormula(player.hand, deckState.fieldCard.value);
 
     if (!formula) {
       // ペナルティ処理
@@ -60,38 +57,34 @@ export class DoboDeclarationService {
     }
 
     // ドボン宣言を生成
-    const doboDeclation: DoboDeclarationType = {
+    const doboDeclaration: DoboDeclarationEntity = {
       playerId,
       formula,
       cards: player.hand.map((card) => ({ ...card })),
-      timestamp: new Date(),
+      timestamp: Date.now(),
       isValid: true,
     };
 
     // ドボンフェーズを有効化
     doboPhaseState.isActive = true;
-    doboPhaseState.firstDoboDeclaration = doboDeclation;
+    doboPhaseState.firstDoboDeclaration = doboDeclaration;
     doboPhaseState.pendingPlayerIds = gameState.players
       .filter((p) => p.id !== playerId)
       .map((p) => p.id);
     doboPhaseState.returnDeclarations = [];
-    doboPhaseState.timeoutAt = new Date(Date.now() + 10000); // 10秒
+    doboPhaseState.timeoutAt = Date.now() + 10000; // 10秒
 
-    // 倍率更新
+    // 倍率更新は MultiplierCalculator を通じて GameEngine が行う
+    // ここでは倍率更新のフラグのみ設定
     const isDrawDobo = session.turnState.drawnCardThisTurn !== null;
-    if (isDrawDobo) {
-      multiplierCalculator.addDrawDobo(session.multiplierState);
-    }
-
     const isOpenDobo = player.hand.every((card) => card.isPublic === true);
-    if (isOpenDobo && player.hand.length > 0) {
-      multiplierCalculator.addOpenDobo(session.multiplierState);
-    }
 
     logger.info('Dobo declared', {
       playerId,
       formula,
       pendingPlayers: doboPhaseState.pendingPlayerIds.length,
+      isDrawDobo,
+      isOpenDobo,
     });
 
     return true;
@@ -106,8 +99,7 @@ export class DoboDeclarationService {
    * @returns true=成功, false=失敗（ペナルティ適用）
    */
   declareReturn(session: GameSession, playerId: string, lastPlayedPlayerId: string): boolean {
-    const { gameState, doboPhaseState, multiplierCalculator } = session;
-    const logger = this.logger;
+    const { gameState, doboPhaseState, deckState } = session;
 
     // ドボンフェーズが有効か確認
     if (!doboPhaseState.isActive) {
@@ -132,7 +124,7 @@ export class DoboDeclarationService {
     const isRuleViolation = playerId === lastPlayedPlayerId;
 
     // 演算式の自動計算を試行
-    const formula = this.validateDoboFormula(player.hand, gameState.deckState.fieldCard.value);
+    const formula = this.validateDoboFormula(player.hand, deckState.fieldCard.value);
 
     if (!formula) {
       // ペナルティ処理
@@ -154,7 +146,7 @@ export class DoboDeclarationService {
       playerId,
       formula,
       cards: player.hand.map((card) => ({ ...card })),
-      timestamp: new Date(),
+      timestamp: Date.now(),
       isValid: true,
     };
 
@@ -164,8 +156,7 @@ export class DoboDeclarationService {
     // pendingPlayerIds から除去
     doboPhaseState.pendingPlayerIds = doboPhaseState.pendingPlayerIds.filter((id) => id !== playerId);
 
-    // 倍率更新
-    multiplierCalculator.addReturnDobo(session.multiplierState);
+    // 倍率更新は MultiplierCalculator を通じて GameEngine が行う
 
     logger.info('Return dobo declared', {
       playerId,
@@ -187,7 +178,6 @@ export class DoboDeclarationService {
    */
   declareNoReturn(session: GameSession, playerId: string): void {
     const { doboPhaseState } = session;
-    const logger = this.logger;
 
     // ドボンフェーズが有効か確認
     if (!doboPhaseState.isActive) {
@@ -216,7 +206,7 @@ export class DoboDeclarationService {
     const { doboPhaseState } = session;
 
     // pendingPlayerIds が空または タイムアウト時に終了
-    if (doboPhaseState.pendingPlayerIds.length === 0 || new Date() >= doboPhaseState.timeoutAt) {
+    if (doboPhaseState.pendingPlayerIds.length === 0 || Date.now() >= doboPhaseState.timeoutAt) {
       this.determineWinner(session);
     }
   }
@@ -228,13 +218,12 @@ export class DoboDeclarationService {
    */
   handleDoboTimeout(session: GameSession): void {
     const { doboPhaseState } = session;
-    const logger = this.logger;
 
     if (!doboPhaseState.isActive) {
       return;
     }
 
-    if (new Date() < doboPhaseState.timeoutAt) {
+    if (Date.now() < doboPhaseState.timeoutAt) {
       return; // まだタイムアウト時刻に達していない
     }
 
@@ -257,16 +246,19 @@ export class DoboDeclarationService {
    */
   determineWinner(session: GameSession): string {
     const { doboPhaseState } = session;
-    const logger = this.logger;
 
     let winner: string;
 
     if (doboPhaseState.returnDeclarations.length > 0) {
       // 返しドボンがある場合: 配列末尾（最後に宣言したプレイヤー）が勝者
       winner = doboPhaseState.returnDeclarations[doboPhaseState.returnDeclarations.length - 1].playerId;
-    } else {
+    } else if (doboPhaseState.firstDoboDeclaration) {
       // 返しドボンがない場合: 最初のドボン宣言者が勝者
       winner = doboPhaseState.firstDoboDeclaration.playerId;
+    } else {
+      // エラー: ドボン宣言が存在しない
+      logger.error('No dobo declaration found');
+      throw new Error('No dobo declaration found');
     }
 
     // ドボンフェーズを終了
@@ -288,8 +280,6 @@ export class DoboDeclarationService {
    * @returns 式を満たす演算子（+, -, *, /）、または null
    */
   private validateDoboFormula(hand: Card[], targetValue: number): string | null {
-    const logger = this.logger;
-
     if (hand.length === 0) {
       return null;
     }
@@ -300,24 +290,57 @@ export class DoboDeclarationService {
     // 4つの演算子を試行
     const operators = ['+', '-', '*', '/'];
 
+    // 加算と乗算は順序不問（交換法則）
+    // 減算と除算は全順列を試す必要がある
     for (const operator of operators) {
-      try {
-        const result = this.applyOperator(values, operator);
-
-        // 結果が整数で、目標値と一致するか確認
-        if (Number.isInteger(result) && result === targetValue) {
-          const formula = this.buildFormulaString(hand, operator);
-          logger.debug('Formula valid', { formula, operator, result });
-          return operator;
+      if (operator === '+' || operator === '*') {
+        // 順序不問
+        try {
+          const result = this.applyOperator(values, operator);
+          if (Number.isInteger(result) && result === targetValue) {
+            const formula = this.buildFormulaString(hand, operator);
+            logger.debug('Formula valid', { formula, operator, result });
+            return operator;
+          }
+        } catch {
+          // ignore
         }
-      } catch (error) {
-        // 0除算などのエラーは無視
-        logger.debug('Operator failed', { operator, error: (error as Error).message });
+      } else {
+        // 減算・除算: 全順列を試す
+        const permutations = this.getPermutations(values);
+        for (const perm of permutations) {
+          try {
+            const result = this.applyOperator(perm, operator);
+            if (Number.isInteger(result) && result === targetValue) {
+              // 対応する手札の順序で式を構築
+              const formula = perm.join(` ${operator} `);
+              logger.debug('Formula valid', { formula, operator, result });
+              return operator;
+            }
+          } catch {
+            // ignore
+          }
+        }
       }
     }
 
-    logger.debug('No valid formula found', { targetValue, handSize: hand.length });
+    logger.debug('No valid formula found', { targetValue, handSize: hand.length, handValues: values });
     return null;
+  }
+
+  /**
+   * 配列の全順列を生成（手札が少ないので計算量は問題ない）
+   */
+  private getPermutations(arr: number[]): number[][] {
+    if (arr.length <= 1) return [arr];
+    const result: number[][] = [];
+    for (let i = 0; i < arr.length; i++) {
+      const rest = [...arr.slice(0, i), ...arr.slice(i + 1)];
+      for (const perm of this.getPermutations(rest)) {
+        result.push([arr[i], ...perm]);
+      }
+    }
+    return result;
   }
 
   /**
@@ -363,22 +386,8 @@ export class DoboDeclarationService {
    * @returns 数値（1-13）
    */
   private cardValueToNumber(card: Card): number {
-    const valueMap: { [key: string]: number } = {
-      'A': 1,
-      '2': 2,
-      '3': 3,
-      '4': 4,
-      '5': 5,
-      '6': 6,
-      '7': 7,
-      '8': 8,
-      '9': 9,
-      '10': 10,
-      'J': 11,
-      'Q': 12,
-      'K': 13,
-    };
-    return valueMap[card.value] || 0;
+    // Card.value は既に CardValue 型（1-13）なのでそのまま返す
+    return card.value;
   }
 
   /**
@@ -401,6 +410,6 @@ export class DoboDeclarationService {
   private applyDoboPenalty(session: GameSession, playerId: string): void {
     // PaymentCalculator に委譲
     // ここではペナルティの存在をログするのみ
-    this.logger.info('Dobo penalty applied', { playerId });
+    logger.info('Dobo penalty applied', { playerId });
   }
 }

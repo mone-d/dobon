@@ -2,241 +2,222 @@
 
 ## Prerequisites
 
-### Build Tool & Runtime
-- **Node.js**: v18.x (LTS)
-- **npm**: v9.x 以上
-- **Package Manager**: npm
+### Unit 1 (Frontend)
+- **Build Tool**: Vite 5.x
+- **Dependencies**: Node.js 18+, npm 9+
+- **Environment Variables**: 
+  - `VITE_API_URL` - バックエンドAPIのURL（開発: http://localhost:3000）
+  - `VITE_WS_URL` - WebSocketのURL（開発: ws://localhost:3000）
+- **System Requirements**: macOS/Linux/Windows, 2GB RAM, 500MB disk space
 
-### System Requirements
-- **OS**: Windows, macOS, Linux対応
-- **Memory**: 1GB以上推奨
-- **Disk Space**: 500MB以上
-
-### Environment Setup
-- **Frontend Port**: 5173 (Vite dev server)
-- **Backend Port**: 3000 (Express server)
-- **Development Mode**: npm scripts使用
+### Unit 2 (Backend - Game Logic)
+- **Build Tool**: TypeScript Compiler (tsc) 5.x
+- **Dependencies**: Node.js 18+, npm 9+
+- **Environment Variables**: 
+  - `PORT` - サーバーポート（デフォルト: 3000）
+  - `NODE_ENV` - 環境（development/production）
+- **System Requirements**: macOS/Linux/Windows, 2GB RAM, 500MB disk space
 
 ---
 
 ## Build Steps
 
-### Step 1: 依存ライブラリのインストール
+### 1. Install Dependencies
 
-#### フロントエンド (Unit 1)
+#### Unit 1 (Frontend)
 ```bash
-# プロジェクトルートで実行
-npm install
-
-# または個別実行
-cd .
+cd frontend
 npm install
 ```
 
-#### バックエンド (Unit 2)
+**Expected Output**: 
+- 依存関係が正常にインストールされる
+- `node_modules/` ディレクトリが作成される
+- package-lock.json が更新される
+
+#### Unit 2 (Backend)
 ```bash
-# バックエンドディレクトリで実行
 cd backend
 npm install
 ```
 
-**確認**:
-```bash
-npm list
-```
-出力: 依存ライブラリが一覧表示されること
+**Expected Output**: 
+- 依存関係が正常にインストールされる
+- `node_modules/` ディレクトリが作成される
+- package-lock.json が更新される
 
 ---
 
-### Step 2: 環境変数の設定
+### 2. Configure Environment
 
-#### フロントエンド (.env.development)
+#### Unit 1 (Frontend)
 ```bash
-# VITE_ プリフィックス付き環境変数
-VITE_API_BASE_URL=http://localhost:3000
-VITE_WEBSOCKET_URL=ws://localhost:3000
+cd frontend
+# 開発環境用の環境変数を設定（.env.developmentは既に存在）
+cat .env.development
+# VITE_API_URL=http://localhost:3000
+# VITE_WS_URL=ws://localhost:3000
 ```
 
-#### バックエンド (backend/.env.development)
-```bash
-NODE_ENV=development
-PORT=3000
-LOG_LEVEL=debug
-HEROKU_APP_NAME=dobon-backend
-```
-
----
-
-### Step 3: フロントエンド ビルド
-
-#### 開発ビルド
-```bash
-npm run dev
-```
-
-**期待される出力**:
-```
-  VITE v4.x.x ready in xxx ms
-  ➜  Local:   http://localhost:5173/
-  ➜  Press q to quit
-```
-
-#### プロダクション ビルド
-```bash
-npm run build
-```
-
-**期待される出力**:
-- `dist/` ディレクトリが生成される
-- ファイルサイズが表示される
-- ビルド完了メッセージ
-
-**ビルド成果物の検証**:
-```bash
-ls -la dist/
-# 以下のファイルが存在することを確認
-# - index.html
-# - assets/ (JS, CSS, etc.)
-```
-
----
-
-### Step 4: バックエンド ビルド
-
-#### 開発実行（TypeScript コンパイル + 実行）
+#### Unit 2 (Backend)
 ```bash
 cd backend
-npm run dev
+# 開発環境用の環境変数を設定（.env.developmentは既に存在）
+cat .env.development
+# PORT=3000
+# NODE_ENV=development
 ```
 
-**期待される出力**:
-```
-[info] Server running on port 3000
-[info] WebSocket server initialized
-```
+---
 
-#### TypeScript コンパイル（本番用）
+### 3. Build All Units
+
+#### Unit 2 (Backend) - ビルド実行
 ```bash
 cd backend
 npm run build
 ```
 
-**期待される出力**:
-- `dist/` ディレクトリが生成される
-- TypeScript が JavaScript にコンパイルされる
+**Expected Output**: 
+- TypeScriptコンパイルが成功
+- `dist/` ディレクトリにJavaScriptファイルが生成される
+- エラーなし（strict mode有効）
 
-**ビルド成果物の検証**:
+**Build Artifacts**:
+- `backend/dist/` - コンパイル済みJavaScriptファイル
+- `backend/dist/game/` - ゲームロジッククラス
+- `backend/dist/socket/` - WebSocketハンドラー
+- `backend/dist/types/` - 型定義
+- `backend/dist/utils/` - ユーティリティ
+- `backend/dist/index.js` - エントリーポイント
+
+#### Unit 1 (Frontend) - ビルド実行
 ```bash
-ls -la backend/dist/
+cd frontend
+npm run build
 ```
+
+**Expected Output**: 
+- Viteビルドが成功
+- `dist/` ディレクトリに最適化されたファイルが生成される
+- バンドルサイズの警告が表示される場合あり（許容範囲内）
+
+**Build Artifacts**:
+- `frontend/dist/` - 本番用ビルドファイル
+- `frontend/dist/index.html` - エントリーHTML
+- `frontend/dist/assets/` - 最適化されたJS/CSSファイル
 
 ---
 
-### Step 5: マルチパッケージビルド（全体）
+### 4. Verify Build Success
 
-```bash
-# モノレポ全体のビルド（オプション）
-npm run build:all
-```
+#### Unit 2 (Backend)
+- **Expected Output**: `✓ Compiled successfully` または類似のメッセージ
+- **Build Artifacts**: `backend/dist/` に全ファイルが存在
+- **Common Warnings**: なし（strict mode有効のため警告もエラー扱い）
 
-このコマンドで以下が実行される:
-1. フロントエンド ビルド
-2. バックエンド ビルド
-3. 検証
-
----
-
-### Step 6: ビルド成果物の検証
-
-#### フロントエンド検証
-```bash
-# dist/ の内容確認
-cat dist/index.html | head -20
-
-# JS ファイルが最小化されているか確認
-wc -c dist/assets/*.js
-```
-
-#### バックエンド検証
-```bash
-# dist/ の内容確認
-ls -la backend/dist/
-
-# 入力ポイントが生成されているか確認
-head -20 backend/dist/index.js
-```
+#### Unit 1 (Frontend)
+- **Expected Output**: `✓ built in [X]ms` または類似のメッセージ
+- **Build Artifacts**: `frontend/dist/` に全ファイルが存在
+- **Common Warnings**: 
+  - バンドルサイズの警告（500KB以下なら許容範囲）
+  - ソースマップの警告（開発時のみ）
 
 ---
 
-## ビルド出力の成功条件
+## Troubleshooting
 
-| 項目 | フロントエンド | バックエンド |
-|-----|-------------|-----------|
-| ビルド状態 | `dist/` 生成 | `dist/` 生成 |
-| ファイル存在 | index.html + assets | index.js + modules |
-| ファイルサイズ | > 50KB | > 100KB |
-| エラー | なし | なし |
-| 警告 | 最小限（許容） | なし |
+### Build Fails with Dependency Errors
 
----
+**Cause**: 
+- `node_modules/` が破損している
+- package-lock.json とpackage.jsonの不整合
+- Node.jsバージョンの不一致
 
-## トラブルシューティング
-
-### Error: Cannot find module
-**原因**: 依存ライブラリがインストールされていない
-
-**解決策**:
+**Solution**:
 ```bash
-# キャッシュクリア
-npm cache clean --force
+# node_modules と package-lock.json を削除
 rm -rf node_modules package-lock.json
 
-# 再インストール
+# 依存関係を再インストール
 npm install
-```
 
-### Error: TypeScript compilation failed
-**原因**: TypeScript 構文エラー
-
-**解決策**:
-```bash
-# エラー詳細確認
-npm run type-check
-
-# エラー箇所修正
-# ファイルを編集して問題を解決
-```
-
-### Build fails with "PORT already in use"
-**原因**: ポート 3000 が既に使用されている
-
-**解決策**:
-```bash
-# 既存プロセス停止
-lsof -ti:3000 | xargs kill -9  # macOS/Linux
-netstat -ano | findstr :3000   # Windows
-
-# または別のポートで実行
-PORT=3001 npm run dev
-```
-
-### Build fails with "EACCES" permission error
-**原因**: ファイルシステムパーミッション不足
-
-**解決策**:
-```bash
-# キャッシュクリア＋再インストール
-npm install --no-save
+# ビルドを再実行
+npm run build
 ```
 
 ---
 
-## ビルド確認チェックリスト
+### Build Fails with TypeScript Compilation Errors (Backend)
 
-- [ ] Node.js v18 インストール確認（`node -v`）
-- [ ] npm インストール確認（`npm -v`）
-- [ ] `npm install` 成功（エラーなし）
-- [ ] フロントエンド ビルド成功（`npm run build`）
-- [ ] バックエンド ビルド成功（`cd backend && npm run build`）
-- [ ] フロントエンド検証（`dist/` が生成される）
-- [ ] バックエンド検証（`backend/dist/` が生成される）
+**Cause**: 
+- 型エラー
+- import/exportの問題
+- tsconfig.jsonの設定ミス
+
+**Solution**:
+1. エラーメッセージを確認
+```bash
+npm run build
+```
+
+2. 型エラーを修正
+```bash
+# 型チェックのみ実行
+npx tsc --noEmit
+```
+
+3. ビルドを再実行
+```bash
+npm run build
+```
+
+---
+
+### Build Fails with Vite Errors (Frontend)
+
+**Cause**: 
+- 環境変数の未設定
+- importパスの問題
+- プラグインの設定ミス
+
+**Solution**:
+1. 環境変数を確認
+```bash
+cat .env.development
+```
+
+2. Vite設定を確認
+```bash
+cat vite.config.ts
+```
+
+3. キャッシュをクリアして再ビルド
+```bash
+rm -rf node_modules/.vite
+npm run build
+```
+
+---
+
+## Build Verification Checklist
+
+### Unit 2 (Backend)
+- [ ] `npm run build` が成功する
+- [ ] `backend/dist/` ディレクトリが存在する
+- [ ] `backend/dist/index.js` が存在する
+- [ ] TypeScriptエラーがない
+
+### Unit 1 (Frontend)
+- [ ] `npm run build` が成功する
+- [ ] `frontend/dist/` ディレクトリが存在する
+- [ ] `frontend/dist/index.html` が存在する
+- [ ] `frontend/dist/assets/` にJS/CSSファイルが存在する
+
+---
+
+## Next Steps
+
+ビルドが成功したら、次のテスト実行に進みます:
+1. Unit Test Execution - `unit-test-instructions.md`
+2. Integration Test Execution - `integration-test-instructions.md`

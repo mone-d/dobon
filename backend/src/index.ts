@@ -1,16 +1,20 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import { Server } from 'socket.io';
 import http from 'http';
-import { GameSocketHandler } from './src/socket/GameSocketHandler';
-import { Logger } from './src/utils/logger';
+import { GameSocketHandler } from './socket/GameSocketHandler';
+import { logger } from './utils/logger';
 
 const app = express();
-const logger = new Logger('Server');
 
 // ミドルウェア設定
 app.use(cors()); // CORS: 全オリジン許可
 app.use(express.json());
+
+// フロントエンドの静的ファイル配信（本番用）
+const frontendDistPath = path.resolve(__dirname, '../../frontend/dist');
+app.use(express.static(frontendDistPath));
 
 // サーバーの作成
 const server = http.createServer(app);
@@ -64,6 +68,17 @@ app.get('/api/rooms', (req, res) => {
 });
 
 // ==================== エラーハンドリング ====================
+
+/**
+ * SPA フォールバック（フロントエンドのルーティング対応）
+ */
+app.get('*', (req, res, next) => {
+  // APIリクエストはスキップ
+  if (req.path.startsWith('/api/') || req.path === '/health') {
+    return next();
+  }
+  res.sendFile(path.join(frontendDistPath, 'index.html'));
+});
 
 /**
  * 404 エラーハンドラー

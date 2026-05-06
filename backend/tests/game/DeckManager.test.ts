@@ -1,11 +1,15 @@
 import { DeckManager } from '../../src/game/DeckManager';
-import { DeckStateFactory, CardFactory } from '../factories';
+import { MultiplierCalculator } from '../../src/game/MultiplierCalculator';
+import { CardFactory } from '../factories';
+import { DeckState, CardValue, Suit } from '../../src/types/domain';
 
 describe('DeckManager', () => {
   let deckManager: DeckManager;
+  let multiplierCalculator: MultiplierCalculator;
 
   beforeEach(() => {
-    deckManager = new DeckManager();
+    multiplierCalculator = new MultiplierCalculator();
+    deckManager = new DeckManager(multiplierCalculator);
   });
 
   describe('initializeDeck', () => {
@@ -16,8 +20,8 @@ describe('DeckManager', () => {
 
     it('全ての数字とスートの組み合わせが含まれる', () => {
       const deck = deckManager.initializeDeck();
-      const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-      const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
+      const values: CardValue[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+      const suits: Suit[] = ['hearts', 'diamonds', 'clubs', 'spades'];
 
       for (const value of values) {
         for (const suit of suits) {
@@ -36,8 +40,12 @@ describe('DeckManager', () => {
 
   describe('drawCard', () => {
     it('デッキからカードを1枚取得', () => {
-      const deckState = DeckStateFactory.create();
-      deckState.deck = deckManager.initializeDeck();
+      const deckState: DeckState = {
+        deck: deckManager.initializeDeck(),
+        discardPile: [],
+        fieldCard: CardFactory.create(5, 'hearts'),
+        reshuffleCount: 0, selectedSuit: null,
+      };
       const initialLength = deckState.deck.length;
 
       const card = deckManager.drawCard(deckState);
@@ -47,8 +55,12 @@ describe('DeckManager', () => {
     });
 
     it('複数回呼び出し時に異なるカードを取得', () => {
-      const deckState = DeckStateFactory.create();
-      deckState.deck = deckManager.initializeDeck();
+      const deckState: DeckState = {
+        deck: deckManager.initializeDeck(),
+        discardPile: [],
+        fieldCard: CardFactory.create(5, 'hearts'),
+        reshuffleCount: 0, selectedSuit: null,
+      };
 
       const card1 = deckManager.drawCard(deckState);
       const card2 = deckManager.drawCard(deckState);
@@ -59,14 +71,16 @@ describe('DeckManager', () => {
 
   describe('reshuffleDeck', () => {
     it('捨札を山札に戻す', () => {
-      const deckState = DeckStateFactory.create();
-      deckState.deck = [];
-      deckState.discardPile = [
-        CardFactory.create('5', 'hearts'),
-        CardFactory.create('10', 'spades'),
-        CardFactory.create('K', 'diamonds'),
-      ];
-      const fieldCard = CardFactory.create('7', 'clubs');
+      const deckState: DeckState = {
+        deck: [],
+        discardPile: [
+          CardFactory.create(5, 'hearts'),
+          CardFactory.create(10, 'spades'),
+          CardFactory.create(13, 'diamonds'),
+        ],
+        fieldCard: CardFactory.create(7, 'clubs'),
+        reshuffleCount: 0, selectedSuit: null,
+      };
 
       deckManager.reshuffleDeck(deckState);
 
@@ -76,26 +90,33 @@ describe('DeckManager', () => {
     });
 
     it('場札は山札に戻されない', () => {
-      const deckState = DeckStateFactory.create();
-      deckState.deck = [];
-      const discardPile = [CardFactory.create('5', 'hearts')];
-      deckState.discardPile = discardPile;
+      const deckState: DeckState = {
+        deck: [],
+        discardPile: [CardFactory.create(5, 'hearts')],
+        fieldCard: CardFactory.create(7, 'clubs'),
+        reshuffleCount: 0, selectedSuit: null,
+      };
+      const discardPileLength = deckState.discardPile.length;
 
       deckManager.reshuffleDeck(deckState);
 
       // 山札に戻されたカード数は捨札 - 1
-      expect(deckState.deck.length).toBe(discardPile.length - 1);
+      expect(deckState.deck.length).toBe(discardPileLength - 1);
     });
   });
 
   describe('determineInitialCard', () => {
     it('A以外のカードが返される', () => {
-      const deckState = DeckStateFactory.create();
-      deckState.deck = deckManager.initializeDeck().filter((c) => c.value !== 'A');
+      const deckState: DeckState = {
+        deck: deckManager.initializeDeck().filter((c) => c.value !== 1),
+        discardPile: [],
+        fieldCard: CardFactory.create(5, 'hearts'),
+        reshuffleCount: 0, selectedSuit: null,
+      };
 
       const card = deckManager.drawCard(deckState);
 
-      expect(card.value).not.toBe('A');
+      expect(card.value).not.toBe(1);
     });
   });
 });

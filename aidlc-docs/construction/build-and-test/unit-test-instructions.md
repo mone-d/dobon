@@ -1,276 +1,189 @@
-# Unit Test Execution Instructions
+# Unit Test Execution
 
 ## Overview
 
-ユニット単位でテストを実行します。各ユニットのテストは独立して実行可能です。
+Unit 2 (Backend - Game Logic) のユニットテストを実行します。
+Unit 1 (Frontend) はコード生成が未完了のため、テストは保留中です。
 
 ---
 
-## Unit 1: Frontend (Vue.js)
+## Unit 2 (Backend - Game Logic) - Unit Tests
 
-### Test Framework
-- **Framework**: Vitest
-- **Configuration**: `vitest.config.ts`
-- **Coverage Tool**: vitest built-in coverage
-
-### Step 1: フロントエンドテスト環境確認
-
-```bash
-# プロジェクトルートで実行
-npm run test --version
-```
-
-### Step 2: 全フロントエンドテスト実行
-
-```bash
-npm run test
-```
-
-**期待される出力**:
-```
- ✓ tests/components/Card.test.ts
- ✓ tests/components/GameBoard.test.ts
- ✓ tests/components/ControlPanel.test.ts
- ✓ tests/services/GameService.test.ts
- ...
- 
- Test Files  15 passed (15)
- Tests       45 passed (45)
- Coverage    85%+
-```
-
-### Step 3: 特定のコンポーネントテスト
-
-```bash
-# コンポーネント単位でテスト実行
-npm run test -- tests/components/Card.test.ts
-
-npm run test -- tests/services/GameService.test.ts
-```
-
-### Step 4: カバレッジ確認
-
-```bash
-npm run test:coverage
-```
-
-**期待される出力**:
-```
-File                        | % Stmts | % Branch | % Funcs | % Lines
----------------------------------------------------------------------------------------
-All files                   |   85.5  |   82.1   |   87.2  |   85.5
- src/components             |   88.3  |   85.1   |   90.5  |   88.3
-  Card.vue                  |   92.1  |   88.5   |   95.0  |   92.1
-  GameBoard.vue             |   86.5  |   82.3   |   88.0  |   86.5
-  ControlPanel.vue          |   85.0  |   80.0   |   86.0  |   85.0
- src/services               |   82.5  |   80.0   |   84.0  |   82.5
-  GameService.ts            |   85.0  |   82.0   |   87.0  |   85.0
- src/stores                 |   87.0  |   84.0   |   89.0  |   87.0
-```
-
-**カバレッジ目標**:
-- ステートメント: 80% 以上
-- ブランチ: 75% 以上
-- 関数: 80% 以上
-- 行: 80% 以上
-
-### Step 5: デバッグモードでテスト実行
-
-```bash
-npm run test -- --inspect-brk
-```
-
-このモードでは以下が可能:
-- ブレークポイント設定
-- ステップ実行
-- 変数検査
-
-### Step 6: Watch モードでテスト実行（開発中）
-
-```bash
-npm run test -- --watch
-```
-
-ファイル保存時に自動的にテストが再実行されます。
-
----
-
-## Unit 2: Backend (Node.js + Express)
-
-### Test Framework
-- **Framework**: Jest
-- **Configuration**: `backend/jest.config.js`
-- **Test Files Location**: `backend/src/**/*.test.ts`
-
-### Step 1: バックエンドテスト環境確認
+### 1. Execute All Unit Tests
 
 ```bash
 cd backend
-npm run test --version
+npm test
 ```
 
-### Step 2: 全バックエンドテスト実行
-
-```bash
-cd backend
-npm run test
+**Expected Output**:
 ```
+PASS  tests/game/CardValidator.test.ts
+PASS  tests/game/MultiplierCalculator.test.ts
+PASS  tests/game/DoboDeclaration.test.ts
+PASS  tests/game/PaymentCalculator.test.ts
+PASS  tests/game/DeckManager.test.ts
 
-**期待される出力**:
-```
- PASS  src/game/CardValidator.test.ts
- PASS  src/game/MultiplierCalculator.test.ts
- PASS  src/game/DeckManager.test.ts
- PASS  src/game/PaymentCalculator.test.ts
- PASS  src/game/DoboDeclaration.test.ts
- PASS  src/game/handlers/TwoCardHandler.test.ts
- PASS  src/game/handlers/KCardHandler.test.ts
- PASS  src/socket/GameSessionManager.test.ts
-
-Test Suites: 8 passed, 8 total
-Tests:       120 passed, 120 total
+Test Suites: 5 passed, 5 total
+Tests:       37 passed, 37 total
 Snapshots:   0 total
-Time:        12.345s
+Time:        X.XXXs
 ```
-
-### Step 3: テストカバレッジ確認
-
-```bash
-cd backend
-npm run test:coverage
-```
-
-**期待される出力**:
-```
-File                              | % Stmts | % Branch | % Funcs | % Lines
----------------------------------------------------------------------------------------------------------
-All files                         |   88.2  |   85.5   |   90.0  |   88.2
- src/game                         |   92.0  |   89.0   |   94.0  |   92.0
-  CardValidator.ts                |   95.0  |   92.0   |   96.0  |   95.0
-  MultiplierCalculator.ts          |   90.0  |   87.0   |   92.0  |   90.0
-  DeckManager.ts                  |   88.0  |   85.0   |   90.0  |   88.0
-  PaymentCalculator.ts            |   91.0  |   88.0   |   93.0  |   91.0
-  DoboDeclaration.ts              |   90.0  |   86.0   |   92.0  |   90.0
- src/game/handlers                |   89.0  |   86.0   |   91.0  |   89.0
- src/socket                       |   85.0  |   82.0   |   87.0  |   85.0
-```
-
-**カバレッジ目標**:
-- ステートメント: 85% 以上
-- ブランチ: 80% 以上
-- 関数: 85% 以上
-- 行: 85% 以上
-
-### Step 4: 特定のテストモジュール実行
-
-```bash
-cd backend
-
-# ゲームロジック テスト
-npm run test -- CardValidator.test.ts
-npm run test -- MultiplierCalculator.test.ts
-npm run test -- DeckManager.test.ts
-npm run test -- PaymentCalculator.test.ts
-npm run test -- DoboDeclaration.test.ts
-
-# カードハンドラー テスト
-npm run test -- handlers/TwoCardHandler.test.ts
-npm run test -- handlers/KCardHandler.test.ts
-npm run test -- handlers/ACardHandler.test.ts
-
-# Socket/セッション管理 テスト
-npm run test -- GameSessionManager.test.ts
-```
-
-### Step 5: リアルタイム Watch モード
-
-```bash
-cd backend
-npm run test -- --watch
-```
-
-### Step 6: デバッグモードでテスト実行
-
-```bash
-cd backend
-npm run test -- --inspect-brk --forceExit
-```
-
-Node.js デバッガーでステップ実行可能。
 
 ---
 
-## テスト失敗時のトラブルシューティング
+### 2. Test Coverage
 
-### フロントエンド
+#### Current Test Coverage
+- **CardValidator**: 全検証ケース（有効/無効カード、複数枚出し、ワイルド）
+- **MultiplierCalculator**: 各倍率条件の組み合わせ、2^n 計算
+- **DoboDeclaration**: 演算式計算（全4演算子）、勝者決定、タイムアウト
+- **PaymentCalculator**: ドボン/バースト/ペナルティ支払い計算
+- **DeckManager**: デッキ初期化、山札再生成（場の最後の1枚を除く）
 
-#### Error: Cannot find module 'vue'
+#### Test Statistics
+- **Total Test Suites**: 5
+- **Total Tests**: 37
+- **Expected Pass Rate**: 100%
+- **Test Coverage**: コアビジネスロジックをカバー
+
+---
+
+### 3. Review Test Results
+
+#### Test Report Location
+- **Console Output**: ターミナルに直接表示
+- **Coverage Report**: `backend/coverage/` (生成する場合)
+
+#### Success Criteria
+- ✅ 全37テストがpass
+- ✅ テストスイートが5つ全てpass
+- ✅ エラーなし
+- ✅ タイムアウトなし
+
+---
+
+### 4. Fix Failing Tests
+
+テストが失敗した場合:
+
+#### Step 1: エラーメッセージを確認
 ```bash
+npm test
+```
+
+失敗したテストのエラーメッセージを確認します。
+
+#### Step 2: 特定のテストファイルを実行
+```bash
+# 特定のテストファイルのみ実行
+npm test -- tests/game/CardValidator.test.ts
+```
+
+#### Step 3: コードを修正
+1. エラーメッセージから問題箇所を特定
+2. 該当するソースコードを修正
+3. テストを再実行
+
+#### Step 4: 全テストを再実行
+```bash
+npm test
+```
+
+全テストがpassするまで繰り返します。
+
+---
+
+## Unit 1 (Frontend) - Unit Tests
+
+### Status: PENDING
+
+Unit 1 (Frontend) のコード生成が未完了のため、ユニットテストは保留中です。
+
+**Next Steps**:
+1. Figmaデザインの完成を待つ
+2. Unit 1のコード生成を完了させる
+3. フロントエンドのユニットテストを実行
+
+---
+
+## Test Execution Checklist
+
+### Unit 2 (Backend)
+- [x] `npm test` が成功する
+- [x] 全37テストがpass
+- [x] テストスイート5つ全てpass
+- [x] エラーなし
+
+### Unit 1 (Frontend)
+- [ ] コード生成完了待ち
+- [ ] テスト実行保留中
+
+---
+
+## Troubleshooting
+
+### Tests Fail with Module Not Found Errors
+
+**Cause**: 
+- 依存関係が未インストール
+- importパスの問題
+
+**Solution**:
+```bash
+# 依存関係を再インストール
 npm install
+
+# テストを再実行
+npm test
 ```
 
-#### Tests timeout
-```bash
-# timeout を増加
-npm run test -- --testTimeout=10000
-```
+---
 
-#### Snapshot mismatch
-```bash
-# snapshot を更新
-npm run test -- --updateSnapshot
-```
+### Tests Fail with Type Errors
 
-### バックエンド
+**Cause**: 
+- TypeScript型の不一致
+- テストファクトリーの問題
 
-#### Error: Cannot find module '...'
+**Solution**:
+1. TypeScriptコンパイルを確認
 ```bash
-cd backend
-npm install
 npm run build
 ```
 
-#### Test timeout
-```bash
-cd backend
-npm run test -- --testTimeout=10000
-```
+2. 型エラーを修正
 
-#### Connection refused (Socket.io テスト)
+3. テストを再実行
 ```bash
-# テストサーバーが起動しているか確認
-npm run test -- --forceExit
+npm test
 ```
 
 ---
 
-## Test Results Summary Template
+### Tests Timeout
 
-### Frontend Test Report
-- **Total Tests**: X
-- **Passed**: X
-- **Failed**: 0
-- **Coverage**: X%
-- **Duration**: X.XXs
-- **Status**: ✅ PASS / ❌ FAIL
+**Cause**: 
+- 非同期処理の問題
+- 無限ループ
 
-### Backend Test Report
-- **Total Tests**: X
-- **Passed**: X
-- **Failed**: 0
-- **Coverage**: X%
-- **Duration**: X.XXs
-- **Status**: ✅ PASS / ❌ FAIL
+**Solution**:
+1. タイムアウトしたテストを特定
+```bash
+npm test -- --verbose
+```
+
+2. 該当テストのロジックを確認
+
+3. タイムアウト時間を調整（必要に応じて）
+```typescript
+// テストファイル内
+jest.setTimeout(10000); // 10秒に延長
+```
 
 ---
 
-## ユニットテスト実行チェックリスト
+## Next Steps
 
-- [ ] Node.js v18 確認
-- [ ] npm install 完了（両ユニット）
-- [ ] フロントエンド テスト実行成功
-- [ ] フロントエンド カバレッジ 80% 以上
-- [ ] バックエンド テスト実行成功
-- [ ] バックエンド カバレッジ 85% 以上
-- [ ] テスト失敗なし（全テスト PASS）
-- [ ] エラーメッセージなし
+ユニットテストが全てpassしたら、次のステップに進みます:
+1. Integration Test Execution - `integration-test-instructions.md`
