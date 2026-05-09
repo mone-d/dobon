@@ -228,8 +228,8 @@ export default function GameScreen() {
       if (prev.currentPlayer?.id !== gameState.currentPlayer?.id && bannerType === 'skip' && cardEffectToast) {
         const newCount = bannerTurnCount + 1;
         setBannerTurnCount(newCount);
-        // 次のターンが終わった = ターンが2回変わった
-        if (newCount >= 2) {
+        // 次のターンが終わった = ターンが1回変わった
+        if (newCount >= 1) {
           setCardEffectToast(null);
           setBannerType(null);
         }
