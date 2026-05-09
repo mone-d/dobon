@@ -1,0 +1,1635 @@
+[
+  {
+    "gameId": "game_1778252477525",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T15:05:23.797Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778001615313_qynojau",
+    "loserId": "guest_1778071546747_mb4b99v",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 1100
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778252730247",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T15:08:08.741Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778252424576_pr2vrjo",
+    "loserId": "guest_1778071546747_mb4b99v",
+    "endReason": "dobon",
+    "multiplier": 2,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778252424576_pr2vrjo",
+        "amount": 2400
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778252901688",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T15:13:54.490Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778252424576_pr2vrjo",
+    "loserId": "guest_1778071546747_mb4b99v",
+    "endReason": "dobon",
+    "multiplier": 4,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778252424576_pr2vrjo",
+        "amount": 4800
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778253246367",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T15:15:03.098Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "",
+    "loserId": "guest_1778071546747_mb4b99v",
+    "endReason": "penalty",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 400
+      },
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778252424576_pr2vrjo",
+        "amount": 400
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778253309446",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T15:19:47.054Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778001615313_qynojau",
+    "loserId": "guest_1778252424576_pr2vrjo",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778252424576_pr2vrjo",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 100
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778253592044",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T15:20:52.758Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "",
+    "loserId": "guest_1778071546747_mb4b99v",
+    "endReason": "penalty",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 800
+      },
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778252424576_pr2vrjo",
+        "amount": 800
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778253592044",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T15:21:12.764Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778071546747_mb4b99v",
+    "loserId": "guest_1778252424576_pr2vrjo",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778252424576_pr2vrjo",
+        "payeeId": "guest_1778071546747_mb4b99v",
+        "amount": 1300
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778253685076",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T15:23:00.664Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778001615313_qynojau",
+    "loserId": "guest_1778071546747_mb4b99v",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 500
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778253685076",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T15:23:00.704Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778001615313_qynojau",
+    "loserId": "guest_1778071546747_mb4b99v",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 1100
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778253877973",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T15:25:22.620Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "",
+    "loserId": "guest_1778071546747_mb4b99v",
+    "endReason": "penalty",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 200
+      },
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778252424576_pr2vrjo",
+        "amount": 200
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778254133477",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T15:30:33.392Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "",
+    "loserId": "guest_1778001615313_qynojau",
+    "endReason": "penalty",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778001615313_qynojau",
+        "payeeId": "guest_1778071546747_mb4b99v",
+        "amount": 1300
+      },
+      {
+        "payerId": "guest_1778001615313_qynojau",
+        "payeeId": "guest_1778252424576_pr2vrjo",
+        "amount": 1300
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778254244377",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T15:38:48.423Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778071546747_mb4b99v",
+    "loserId": "guest_1778252424576_pr2vrjo",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778252424576_pr2vrjo",
+        "payeeId": "guest_1778071546747_mb4b99v",
+        "amount": 500
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778254733440",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T15:41:56.432Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778071546747_mb4b99v",
+    "loserId": "guest_1778252424576_pr2vrjo",
+    "endReason": "dobon",
+    "multiplier": 2,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778252424576_pr2vrjo",
+        "payeeId": "guest_1778071546747_mb4b99v",
+        "amount": 2000
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778254920525",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T15:47:09.241Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778001615313_qynojau",
+    "loserId": "guest_1778071546747_mb4b99v",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 700
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778255233249",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T15:48:01.069Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778001615313_qynojau",
+    "loserId": "guest_1778071546747_mb4b99v",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 800
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778255284960",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T15:51:51.776Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778071546747_mb4b99v",
+    "loserId": "guest_1778252424576_pr2vrjo",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778252424576_pr2vrjo",
+        "payeeId": "guest_1778071546747_mb4b99v",
+        "amount": 100
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778255518535",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T15:58:56.436Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778071546747_mb4b99v",
+    "loserId": "guest_1778001615313_qynojau",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778001615313_qynojau",
+        "payeeId": "guest_1778071546747_mb4b99v",
+        "amount": 400
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778255942781",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T16:03:58.433Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "",
+    "loserId": "guest_1778252424576_pr2vrjo",
+    "endReason": "penalty",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778252424576_pr2vrjo",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 900
+      },
+      {
+        "payerId": "guest_1778252424576_pr2vrjo",
+        "payeeId": "guest_1778071546747_mb4b99v",
+        "amount": 900
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778256250106",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T16:08:08.534Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778071546747_mb4b99v",
+    "loserId": "guest_1778001615313_qynojau",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778001615313_qynojau",
+        "payeeId": "guest_1778071546747_mb4b99v",
+        "amount": 800
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778256494229",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T16:09:18.946Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778071546747_mb4b99v",
+    "loserId": "guest_1778252424576_pr2vrjo",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778252424576_pr2vrjo",
+        "payeeId": "guest_1778071546747_mb4b99v",
+        "amount": 300
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778256562325",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T16:10:19.157Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778071546747_mb4b99v",
+    "loserId": "guest_1778252424576_pr2vrjo",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778252424576_pr2vrjo",
+        "payeeId": "guest_1778071546747_mb4b99v",
+        "amount": 700
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778256622332",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T16:11:21.417Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778071546747_mb4b99v",
+    "loserId": "guest_1778252424576_pr2vrjo",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778252424576_pr2vrjo",
+        "payeeId": "guest_1778071546747_mb4b99v",
+        "amount": 600
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778256685949",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T16:15:56.465Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "",
+    "loserId": "guest_1778071546747_mb4b99v",
+    "endReason": "burst",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 100
+      },
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778252424576_pr2vrjo",
+        "amount": 100
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778256991792",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T16:35:31.819Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778071546747_mb4b99v",
+    "loserId": "guest_1778001615313_qynojau",
+    "endReason": "dobon",
+    "multiplier": 4,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778001615313_qynojau",
+        "payeeId": "guest_1778071546747_mb4b99v",
+        "amount": 2800
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778258139426",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T16:41:24.885Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778252424576_pr2vrjo",
+    "loserId": "guest_1778071546747_mb4b99v",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778252424576_pr2vrjo",
+        "amount": 1200
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778258489476",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T16:42:20.431Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778071546747_mb4b99v",
+    "loserId": "guest_1778252424576_pr2vrjo",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778252424576_pr2vrjo",
+        "payeeId": "guest_1778071546747_mb4b99v",
+        "amount": 1000
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778258543683",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T16:46:16.644Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "",
+    "loserId": "guest_1778001615313_qynojau",
+    "endReason": "penalty",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778001615313_qynojau",
+        "payeeId": "guest_1778071546747_mb4b99v",
+        "amount": 1000
+      },
+      {
+        "payerId": "guest_1778001615313_qynojau",
+        "payeeId": "guest_1778252424576_pr2vrjo",
+        "amount": 1000
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778258543683",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T16:46:23.603Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778001615313_qynojau",
+    "loserId": "guest_1778071546747_mb4b99v",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 1000
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778258804190",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T16:50:45.922Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778001615313_qynojau",
+    "loserId": "guest_1778071546747_mb4b99v",
+    "endReason": "dobon",
+    "multiplier": 2,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 1000
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778259050883",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T16:53:06.871Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "",
+    "loserId": "guest_1778071546747_mb4b99v",
+    "endReason": "penalty",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 400
+      },
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778252424576_pr2vrjo",
+        "amount": 400
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778259199320",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T16:56:55.950Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778001615313_qynojau",
+    "loserId": "guest_1778071546747_mb4b99v",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 400
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778259418295",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T17:07:41.870Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "",
+    "loserId": "guest_1778071546747_mb4b99v",
+    "endReason": "penalty",
+    "multiplier": 2,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 2400
+      },
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778252424576_pr2vrjo",
+        "amount": 2400
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778260069748",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T17:12:37.265Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778001615313_qynojau",
+    "loserId": "guest_1778252424576_pr2vrjo",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778252424576_pr2vrjo",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 1000
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778260361137",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T17:14:26.887Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778252424576_pr2vrjo",
+    "loserId": "guest_1778001615313_qynojau",
+    "endReason": "dobon",
+    "multiplier": 2,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778001615313_qynojau",
+        "payeeId": "guest_1778252424576_pr2vrjo",
+        "amount": 2200
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778260471495",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T17:19:39.106Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778252424576_pr2vrjo",
+    "loserId": "guest_1778071546747_mb4b99v",
+    "endReason": "dobon",
+    "multiplier": 2,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778252424576_pr2vrjo",
+        "amount": 1000
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778260783056",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T17:21:49.996Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778252424576_pr2vrjo",
+    "loserId": "guest_1778001615313_qynojau",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778001615313_qynojau",
+        "payeeId": "guest_1778252424576_pr2vrjo",
+        "amount": 1300
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778260913557",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T17:24:25.909Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778001615313_qynojau",
+    "loserId": "guest_1778252424576_pr2vrjo",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778252424576_pr2vrjo",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 1100
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778261068899",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T17:26:03.108Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778001615313_qynojau",
+    "loserId": "guest_1778071546747_mb4b99v",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 100
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778261068899",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T17:26:03.218Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778001615313_qynojau",
+    "loserId": "guest_1778071546747_mb4b99v",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 900
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778261169764",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T17:29:22.174Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778071546747_mb4b99v",
+    "loserId": "guest_1778252424576_pr2vrjo",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778252424576_pr2vrjo",
+        "payeeId": "guest_1778071546747_mb4b99v",
+        "amount": 800
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778261365655",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T17:29:43.526Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778071546747_mb4b99v",
+    "loserId": "guest_1778252424576_pr2vrjo",
+    "endReason": "dobon",
+    "multiplier": 2,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778252424576_pr2vrjo",
+        "payeeId": "guest_1778071546747_mb4b99v",
+        "amount": 200
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778261387776",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T17:33:20.767Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778252424576_pr2vrjo",
+    "loserId": "guest_1778071546747_mb4b99v",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778252424576_pr2vrjo",
+        "amount": 200
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778261605169",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T17:36:24.997Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778001615313_qynojau",
+    "loserId": "guest_1778071546747_mb4b99v",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 1000
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778261788075",
+    "roomId": "room-1778252401544-ZIUL",
+    "timestamp": "2026-05-08T17:40:34.650Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778001615313_qynojau",
+    "loserId": "guest_1778001615313_qynojau",
+    "endReason": "return_dobon",
+    "multiplier": 2,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778001615313_qynojau",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 1000
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778262319937",
+    "roomId": "room-1778262260340-DPZL",
+    "timestamp": "2026-05-08T17:46:14.615Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778001615313_qynojau",
+    "loserId": "guest_1778252424576_pr2vrjo",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778252424576_pr2vrjo",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 800
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778262407691",
+    "roomId": "room-1778262260340-DPZL",
+    "timestamp": "2026-05-08T17:47:32.238Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778252424576_pr2vrjo",
+    "loserId": "guest_1778001615313_qynojau",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778001615313_qynojau",
+        "payeeId": "guest_1778252424576_pr2vrjo",
+        "amount": 1200
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778262457563",
+    "roomId": "room-1778262260340-DPZL",
+    "timestamp": "2026-05-08T17:51:07.086Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778252424576_pr2vrjo",
+    "loserId": "guest_1778001615313_qynojau",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778001615313_qynojau",
+        "payeeId": "guest_1778252424576_pr2vrjo",
+        "amount": 200
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778262688578",
+    "roomId": "room-1778262260340-DPZL",
+    "timestamp": "2026-05-08T17:57:11.839Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "",
+    "loserId": "guest_1778001615313_qynojau",
+    "endReason": "penalty",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778001615313_qynojau",
+        "payeeId": "guest_1778252424576_pr2vrjo",
+        "amount": 400
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778262688578",
+    "roomId": "room-1778262260340-DPZL",
+    "timestamp": "2026-05-08T17:57:41.277Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778001615313_qynojau",
+    "loserId": "guest_1778252424576_pr2vrjo",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778252424576_pr2vrjo",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 900
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778263061842",
+    "roomId": "room-1778262260340-DPZL",
+    "timestamp": "2026-05-08T18:00:56.096Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778252424576_pr2vrjo",
+    "loserId": "guest_1778001615313_qynojau",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778001615313_qynojau",
+        "payeeId": "guest_1778252424576_pr2vrjo",
+        "amount": 1100
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778263260090",
+    "roomId": "room-1778262260340-DPZL",
+    "timestamp": "2026-05-08T18:06:36.988Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778252424576_pr2vrjo"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778252424576_pr2vrjo": "koya"
+    },
+    "winnerId": "guest_1778252424576_pr2vrjo",
+    "loserId": "guest_1778001615313_qynojau",
+    "endReason": "dobon",
+    "multiplier": 2,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778001615313_qynojau",
+        "payeeId": "guest_1778252424576_pr2vrjo",
+        "amount": 2600
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778306389844",
+    "roomId": "room-1778306379515-HLMJ",
+    "timestamp": "2026-05-09T05:59:50.703Z",
+    "players": [
+      "guest_1778001459969_ka2vkr8",
+      "guest_1778001500896_l9m7utk"
+    ],
+    "playerNames": {
+      "guest_1778001459969_ka2vkr8": "mac",
+      "guest_1778001500896_l9m7utk": "guest"
+    },
+    "winnerId": "",
+    "loserId": "guest_1778001459969_ka2vkr8",
+    "endReason": "penalty",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778001459969_ka2vkr8",
+        "payeeId": "guest_1778001500896_l9m7utk",
+        "amount": 700
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778306393582",
+    "roomId": "room-1778306379515-HLMJ",
+    "timestamp": "2026-05-09T06:01:38.057Z",
+    "players": [
+      "guest_1778001459969_ka2vkr8",
+      "guest_1778001500896_l9m7utk"
+    ],
+    "playerNames": {
+      "guest_1778001459969_ka2vkr8": "mac",
+      "guest_1778001500896_l9m7utk": "guest"
+    },
+    "winnerId": "guest_1778001500896_l9m7utk",
+    "loserId": "guest_1778001459969_ka2vkr8",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778001459969_ka2vkr8",
+        "payeeId": "guest_1778001500896_l9m7utk",
+        "amount": 600
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778306721400",
+    "roomId": "room-1778306712791-JOZA",
+    "timestamp": "2026-05-09T06:06:27.286Z",
+    "players": [
+      "guest_1778001459969_ka2vkr8",
+      "guest_1778001500896_l9m7utk"
+    ],
+    "playerNames": {
+      "guest_1778001459969_ka2vkr8": "mac",
+      "guest_1778001500896_l9m7utk": "guest"
+    },
+    "winnerId": "guest_1778001459969_ka2vkr8",
+    "loserId": "guest_1778001500896_l9m7utk",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778001500896_l9m7utk",
+        "payeeId": "guest_1778001459969_ka2vkr8",
+        "amount": 1300
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778331305273",
+    "roomId": "room-1778331293784-IPWM",
+    "timestamp": "2026-05-09T12:55:06.893Z",
+    "players": [
+      "guest_1778001459969_ka2vkr8",
+      "guest_1778001500896_l9m7utk"
+    ],
+    "playerNames": {
+      "guest_1778001459969_ka2vkr8": "mac",
+      "guest_1778001500896_l9m7utk": "guest"
+    },
+    "winnerId": "",
+    "loserId": "guest_1778001459969_ka2vkr8",
+    "endReason": "penalty",
+    "multiplier": 8,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778001459969_ka2vkr8",
+        "payeeId": "guest_1778001500896_l9m7utk",
+        "amount": 4000
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778338614771",
+    "roomId": "room-1778338576473-TYUY",
+    "timestamp": "2026-05-09T15:06:39.695Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ"
+    },
+    "winnerId": "guest_1778001615313_qynojau",
+    "loserId": "",
+    "endReason": "dobon",
+    "multiplier": 4,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 3600
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778339218739",
+    "roomId": "room-1778338576473-TYUY",
+    "timestamp": "2026-05-09T15:12:42.785Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ"
+    },
+    "winnerId": "guest_1778071546747_mb4b99v",
+    "loserId": "",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778001615313_qynojau",
+        "payeeId": "guest_1778071546747_mb4b99v",
+        "amount": 800
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778339569560",
+    "roomId": "room-1778338576473-TYUY",
+    "timestamp": "2026-05-09T15:17:53.884Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ"
+    },
+    "winnerId": "guest_1778001615313_qynojau",
+    "loserId": "",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778071546747_mb4b99v",
+        "payeeId": "guest_1778001615313_qynojau",
+        "amount": 900
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778339879132",
+    "roomId": "room-1778338576473-TYUY",
+    "timestamp": "2026-05-09T15:25:17.663Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ"
+    },
+    "winnerId": "guest_1778071546747_mb4b99v",
+    "loserId": "",
+    "endReason": "dobon",
+    "multiplier": 1,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778001615313_qynojau",
+        "payeeId": "guest_1778071546747_mb4b99v",
+        "amount": 400
+      }
+    ]
+  },
+  {
+    "gameId": "game_1778340327030",
+    "roomId": "room-1778338576473-TYUY",
+    "timestamp": "2026-05-09T15:39:01.190Z",
+    "players": [
+      "guest_1778001615313_qynojau",
+      "guest_1778071546747_mb4b99v"
+    ],
+    "playerNames": {
+      "guest_1778001615313_qynojau": "phone",
+      "guest_1778071546747_mb4b99v": "まなみ"
+    },
+    "winnerId": "guest_1778071546747_mb4b99v",
+    "loserId": "",
+    "endReason": "dobon",
+    "multiplier": 2,
+    "baseRate": 100,
+    "payments": [
+      {
+        "payerId": "guest_1778001615313_qynojau",
+        "payeeId": "guest_1778071546747_mb4b99v",
+        "amount": 1200
+      }
+    ]
+  }
+]

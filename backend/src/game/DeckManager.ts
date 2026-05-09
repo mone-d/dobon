@@ -92,8 +92,9 @@ export class DeckManager {
     while (true) {
       const card = this.drawCard(deckState);
       if (card.value === 1) {
-        // A が出た場合: 倍率を加算して再度引く
+        // A が出た場合: 倍率を加算して捨て札に入れ、再度引く
         this.multiplierCalculator.addInitialA(multiplierState);
+        deckState.discardPile.push(card);
         continue;
       }
       deckState.fieldCard = card;
@@ -121,12 +122,12 @@ export class DeckManager {
 
   /**
    * 山札を再生成する
-   * 場の最後の1枚（現在の場札）を除いた捨て札をシャッフルして山札に戻す
+   * 捨て札を全てシャッフルして山札に戻す
+   * （現在の場札はfieldCardに保持されているのでdiscardPileには含まれない）
    */
   reshuffleDeck(deckState: DeckState): void {
-    // 捨て札から場の最後の1枚（fieldCard）を除いて山札に戻す
     if (deckState.discardPile.length > 0) {
-      const newDeck = deckState.discardPile.slice(0, -1);
+      const newDeck = [...deckState.discardPile];
       // 全カードの公開状態をリセット
       newDeck.forEach(card => { card.isPublic = false; });
       deckState.discardPile = [];

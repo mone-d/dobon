@@ -38,21 +38,22 @@ export class DoboDeclarationService {
     // ルール違反チェック: 自分のカードへのドボン宣言か？
     const isRuleViolation = playerId === lastPlayedPlayerId;
 
+    // ルール違反ドボン（自分のカードへのドボン）の場合 → 計算式チェック前に弾く
+    if (isRuleViolation) {
+      this.applyDoboPenalty(session, playerId);
+      (session as any).lastPenaltyReason = 'rule_violation';
+      logger.info('Dobo failed - rule violation (dobo on own card)', { playerId });
+      return false;
+    }
+
     // 演算式の自動計算を試行
     const formula = this.validateDoboFormula(player.hand, deckState.fieldCard.value);
 
     if (!formula) {
-      // ペナルティ処理
+      // 計算結果が場札と一致しない
       this.applyDoboPenalty(session, playerId);
-      logger.info('Dobo failed - formula not valid', { playerId, ruleViolation: isRuleViolation });
-      return false;
-    }
-
-    // ルール違反ドボン（自分のカードへのドボン）の場合
-    if (isRuleViolation) {
-      // ペナルティ処理を実行
-      this.applyDoboPenalty(session, playerId);
-      logger.info('Dobo failed - rule violation (dobo on own card)', { playerId });
+      (session as any).lastPenaltyReason = 'invalid_formula';
+      logger.info('Dobo failed - formula not valid', { playerId });
       return false;
     }
 
@@ -120,26 +121,18 @@ export class DoboDeclarationService {
       return false;
     }
 
-    // ルール違反チェック: 自分のカードへの返しドボン宣言か？
-    const isRuleViolation = playerId === lastPlayedPlayerId;
-
     // 演算式の自動計算を試行
     const formula = this.validateDoboFormula(player.hand, deckState.fieldCard.value);
 
     if (!formula) {
       // ペナルティ処理
       this.applyDoboPenalty(session, playerId);
-      logger.info('Return dobo failed - formula not valid', { playerId, ruleViolation: isRuleViolation });
+      logger.info('Return dobo failed - formula not valid', { playerId });
       return false;
     }
 
-    // ルール違反返しドボンの場合
-    if (isRuleViolation) {
-      // ペナルティ処理を実行
-      this.applyDoboPenalty(session, playerId);
-      logger.info('Return dobo failed - rule violation', { playerId });
-      return false;
-    }
+    // 返しドボンでは「自分のカードへのドボン」チェックは不要
+    // （ドボン返しは自分が出したカードに対して返すのが正常）
 
     // 返しドボン宣言を生成
     const returnDeclaration: ReturnDoboDeclaration = {
@@ -279,7 +272,7 @@ export class DoboDeclarationService {
    * @param targetValue 場札の数字（目標値）
    * @returns 式を満たす演算子（+, -, *, /）、または null
    */
-  private validateDoboFormula(hand: Card[], targetValue: number): string | null {
+  validateDoboFormula(hand: Card[], targetValue: number): string | null {
     if (hand.length === 0) {
       return null;
     }

@@ -5,6 +5,8 @@ import { DoboDeclarationService } from '../game/DoboDeclaration';
 import { PaymentCalculator } from '../game/PaymentCalculator';
 import { DeckManager } from '../game/DeckManager';
 import { MultiplierCalculator } from '../game/MultiplierCalculator';
+import { GameHistoryStore, GameRecord } from '../stats/GameHistoryStore';
+import { StatsCalculator } from '../stats/StatsCalculator';
 import { logger } from '../utils/logger';
 
 /**
@@ -33,6 +35,8 @@ export class GameSocketHandler {
   private multiplierCalculator = new MultiplierCalculator();
   private deckManager = new DeckManager(this.multiplierCalculator);
   private paymentCalculator = new PaymentCalculator(this.deckManager);
+  private historyStore = new GameHistoryStore();
+  private statsCalculator = new StatsCalculator(this.historyStore);
 
   // Socket.io Server インスタンス
   private io: Server | null = null;
@@ -101,6 +105,10 @@ export class GameSocketHandler {
       // その他のイベント
       socket.on('game:leave-next', (data: any, callback: any) => this.handleLeaveNext(socket, data, callback));
       socket.on('game:accept-effect', (data: any, callback: any) => this.handleAcceptEffect(socket, data, callback));
+
+      // 統計イベント
+      socket.on('stats:get-player', (data: any, callback: any) => this.handleGetPlayerStats(socket, data, callback));
+      socket.on('stats:get-room-balance', (data: any, callback: any) => this.handleGetRoomBalance(socket, data, callback));
 
       // 接続解除
       socket.on('disconnect', () => this.handleDisconnect(socket));
@@ -339,6 +347,8 @@ export class GameSocketHandler {
    */
   private handleNextRound(socket: Socket, data: any, callback: any): void {
     const { roomId } = data;
+    const playerInfo = this.socketPlayerMap.get(socket.id);
+    const playerId = playerInfo?.playerId || '';
     
     try {
       const session = this.sessionMap.get(roomId);
@@ -351,58 +361,116 @@ export class GameSocketHandler {
       // Check if any player wants to leave
       const leaveSet = this.leaveNextPlayerIds.get(roomId);
       if (leaveSet && leaveSet.size > 0) {
-        // End the room session, notify all players
         this.broadcastToRoom(roomId, 'room:ended', {
           reason: 'player-leaving',
           leavingPlayers: Array.from(leaveSet),
         });
-        
-        // Clean up
         this.sessionMap.delete(roomId);
         this.leaveNextPlayerIds.delete(roomId);
-        
-        // Remove all socket mappings for this room
         for (const [socketId, info] of this.socketPlayerMap.entries()) {
           if (info.roomId === roomId) {
             this.socketPlayerMap.delete(socketId);
           }
         }
-        
         callback({ success: true, roomEnded: true });
-        logger.info('Room ended due to player leaving', { roomId, leavingPlayers: Array.from(leaveSet) });
+        logger.info('Room ended due to player leaving', { roomId });
         return;
       }
       
-      // Re-initialize game with same players and baseRate
-      const gamePlayers = session.gameState.players.map(p => ({
-        id: p.id,
-        user: p.user,
-        hand: [] as Card[],
-        handCount: 0,
-        isCurrentPlayer: false,
-      }));
+      // 準備完了を記録
+      if (!this.nextRoundReadyMap.has(roomId)) {
+        this.nextRoundReadyMap.set(roomId, new Set());
+      }
+      const readySet = this.nextRoundReadyMap.get(roomId)!;
+      readySet.add(playerId);
       
-      const newSession = this.gameEngine.startGame(gamePlayers, session.baseRate);
-      this.sessionMap.set(roomId, newSession);
+      const totalPlayers = session.gameState.players.length;
       
-      // Broadcast game started to all players
-      this.broadcastToRoom(roomId, 'game:started', { roomId,
-        gameId: newSession.gameState.gameId,
-        players: newSession.gameState.players.map(p => this.simplifyPlayer(p)),
-        fieldCard: newSession.deckState.fieldCard,
-        multiplier: newSession.multiplierState.totalMultiplier,
-        currentPlayer: this.simplifyPlayer(newSession.gameState.currentPlayer),
+      // 全員に準備状況を通知
+      this.broadcastToRoom(roomId, 'game:next-round-ready', {
+        readyCount: readySet.size,
+        totalPlayers,
+        readyPlayerIds: Array.from(readySet),
       });
       
-      // Send individual game states
-      this.broadcastGameStateToAll(roomId, newSession);
+      // 最初の1人が押した時に15秒タイマーを開始
+      if (readySet.size === 1 && !this.nextRoundTimerMap.has(roomId)) {
+        const timerId = setTimeout(() => {
+          this.startNextRound(roomId);
+        }, 15000);
+        this.nextRoundTimerMap.set(roomId, timerId);
+      }
       
-      callback({ success: true, gameId: newSession.gameState.gameId });
-      logger.info('Next round started', { roomId, gameId: newSession.gameState.gameId });
+      // 全員揃ったら即開始
+      if (readySet.size >= totalPlayers) {
+        this.startNextRound(roomId);
+      }
+      
+      callback({ success: true, waiting: true });
     } catch (error) {
       logger.error('Next round failed', { error: (error as Error).message });
-      callback({ success: false, error: (error as Error).message });
+      callback({ success: false });
     }
+  }
+
+  /**
+   * 次のラウンドを実際に開始する
+   */
+  private startNextRound(roomId: string): void {
+    // タイマーをクリア
+    const timerId = this.nextRoundTimerMap.get(roomId);
+    if (timerId) {
+      clearTimeout(timerId);
+      this.nextRoundTimerMap.delete(roomId);
+    }
+    this.nextRoundReadyMap.delete(roomId);
+
+    const session = this.sessionMap.get(roomId);
+    if (!session) return;
+
+    // 前ゲームの敗者を記録（項目14で使用）
+    // loserId は game:ended で送信済み。sessionから取得
+    const lastLoserId = this.lastLoserMap.get(roomId);
+
+    // Re-initialize game with same players and baseRate
+    const gamePlayers = session.gameState.players.map(p => ({
+      id: p.id,
+      user: p.user,
+      hand: [] as Card[],
+      handCount: 0,
+      isCurrentPlayer: false,
+    }));
+    
+    const newSession = this.gameEngine.startGame(gamePlayers, session.baseRate);
+    
+    // 項目14: 前ゲームの敗者からスタート
+    if (lastLoserId) {
+      const loserIndex = newSession.turnState.turnOrder.indexOf(lastLoserId);
+      if (loserIndex >= 0) {
+        newSession.turnState.currentPlayerIndex = loserIndex;
+        const loserPlayer = newSession.gameState.players.find(p => p.id === lastLoserId);
+        if (loserPlayer) {
+          newSession.gameState.currentPlayer = loserPlayer;
+        }
+      }
+    }
+
+    this.sessionMap.set(roomId, newSession);
+    
+    // Broadcast game started to all players
+    this.broadcastToRoom(roomId, 'game:started', { roomId,
+      gameId: newSession.gameState.gameId,
+      players: newSession.gameState.players.map(p => this.simplifyPlayer(p)),
+      fieldCard: newSession.deckState.fieldCard,
+      multiplier: newSession.multiplierState.totalMultiplier,
+      currentPlayer: this.simplifyPlayer(newSession.gameState.currentPlayer),
+      initialACount: newSession.multiplierState.initialACount,
+    });
+    
+    // Send individual game states
+    this.broadcastGameStateToAll(roomId, newSession);
+    
+    logger.info('Next round started', { roomId, gameId: newSession.gameState.gameId, startPlayer: lastLoserId || 'random' });
   }
 
   /**
@@ -459,6 +527,7 @@ export class GameSocketHandler {
           fieldCard: session.deckState.fieldCard,
           multiplier: session.multiplierState.totalMultiplier,
           currentPlayer: this.simplifyPlayer(session.gameState.currentPlayer),
+          initialACount: session.multiplierState.initialACount,
         });
       } else {
         socket.emit('game:started', {
@@ -468,6 +537,7 @@ export class GameSocketHandler {
           fieldCard: session.deckState.fieldCard,
           multiplier: session.multiplierState.totalMultiplier,
           currentPlayer: this.simplifyPlayer(session.gameState.currentPlayer),
+          initialACount: session.multiplierState.initialACount,
         });
       }
 
@@ -491,6 +561,14 @@ export class GameSocketHandler {
 
   // 効果タイマー: roomId → NodeJS.Timeout
   private effectTimeoutMap = new Map<string, NodeJS.Timeout>();
+  // 効果被害者: roomId → { victimId, cardValue }
+  private effectVictimMap = new Map<string, { victimId: string; cardValue: number }>();
+  // 次ラウンド準備完了: roomId → Set<playerId>
+  private nextRoundReadyMap = new Map<string, Set<string>>();
+  // 次ラウンドタイマー: roomId → NodeJS.Timeout
+  private nextRoundTimerMap = new Map<string, NodeJS.Timeout>();
+  // 前ゲームの敗者: roomId → playerId
+  private lastLoserMap = new Map<string, string>();
 
   /**
    * カードを出す
@@ -528,6 +606,9 @@ export class GameSocketHandler {
       const success = this.gameEngine.playCard(session, playerId, cards);
 
       if (success) {
+        // カードを出したらドロー状態をリセット
+        (session as any).lastDrawPlayerId = null;
+
         // 8（ワイルドカード）が出された場合、フロントエンドに通知
         const has8 = cards.some((c: any) => c.value === 8);
         if (has8) {
@@ -553,7 +634,7 @@ export class GameSocketHandler {
         this.autoSkipToPlayer(roomId, session, playerId, socket);
       }
 
-      callback({ success });
+      callback({ success, error: success ? undefined : 'INVALID_CARD' });
       logger.info('Card played', { roomId, playerId, success });
     } catch (error) {
       logger.error('Play card failed', { error: (error as Error).message });
@@ -593,10 +674,14 @@ export class GameSocketHandler {
     const existingTimeout = this.effectTimeoutMap.get(roomId);
     if (existingTimeout) clearTimeout(existingTimeout);
 
+    // 被害者情報を保存
+    this.effectVictimMap.set(roomId, { victimId: currentPlayerId, cardValue });
+
     // 30秒タイムアウト
     const timeoutId = setTimeout(() => {
       this.applyStackableEffect(roomId, session, cardValue);
       this.effectTimeoutMap.delete(roomId);
+      this.effectVictimMap.delete(roomId);
     }, 30000);
 
     this.effectTimeoutMap.set(roomId, timeoutId);
@@ -641,9 +726,14 @@ export class GameSocketHandler {
         return;
       }
 
-      // 現在のターンプレイヤーが被害者か確認
-      const currentPlayerId = session.turnState.turnOrder[session.turnState.currentPlayerIndex];
-      if (currentPlayerId !== playerId) {
+      // 保存された被害者情報と照合
+      const victimInfo = this.effectVictimMap.get(roomId);
+      if (!victimInfo) {
+        callback({ success: false, error: 'No effect pending' });
+        return;
+      }
+      if (victimInfo.victimId !== playerId) {
+        logger.warn('Accept effect: not the victim', { roomId, playerId, expectedVictim: victimInfo.victimId });
         callback({ success: false, error: 'Not the victim' });
         return;
       }
@@ -654,13 +744,13 @@ export class GameSocketHandler {
         clearTimeout(timeoutId);
         this.effectTimeoutMap.delete(roomId);
       }
+      this.effectVictimMap.delete(roomId);
 
-      // 効果を発動（forcedDrawCountがあれば2の効果、なければKの効果）
-      const cardValue = session.turnState.forcedDrawCount > 0 ? 2 : 13;
-      this.applyStackableEffect(roomId, session, cardValue);
+      // 効果を発動
+      this.applyStackableEffect(roomId, session, victimInfo.cardValue);
 
       callback({ success: true });
-      logger.info('Effect accepted by victim', { roomId, playerId, cardValue });
+      logger.info('Effect accepted by victim', { roomId, playerId, cardValue: victimInfo.cardValue });
     } catch (error) {
       logger.error('Accept effect failed', { error: (error as Error).message });
       callback({ success: false });
@@ -699,6 +789,9 @@ export class GameSocketHandler {
       const card = this.gameEngine.drawCard(session, playerId);
 
       if (card) {
+        // 引きドボン判定用: 最後にドローしたプレイヤーを記録
+        (session as any).lastDrawPlayerId = playerId;
+
         // 引いたカードを宣言者のみに返す
         callback({ success: true, card });
 
@@ -760,14 +853,34 @@ export class GameSocketHandler {
         return;
       }
 
+      // ドボンフェーズ中は重複宣言を拒否
+      if (session.doboPhaseState.isActive) {
+        logger.debug('Dobo blocked: phase already active', { roomId, playerId });
+        callback({ success: false, error: 'dobo_phase_active' });
+        return;
+      }
+
+      // ゲーム終了後は拒否
+      if (session.gameState.gamePhase === 'ended') {
+        logger.debug('Dobo blocked: game ended', { roomId, playerId });
+        callback({ success: false, error: 'game_ended' });
+        return;
+      }
+
       const lastPlayedPlayerId = session.gameState.lastPlayedPlayer?.id || '';
 
+      // 天鳳判定: 誰もカードを出していない状態でのドボン宣言
+      const isTenho = session.gameState.lastPlayedPlayer === null;
+
       // DoboDeclarationService でドボン宣言を処理
-      const success = this.doboDeclaration.declareDobo(session, playerId, lastPlayedPlayerId);
+      // 天鳳の場合はルール違反チェック（自分のカードへのドボン）をスキップ
+      const success = this.doboDeclaration.declareDobo(session, playerId, isTenho ? '' : lastPlayedPlayerId);
 
       if (success) {
-        // 引きドボンフラグを保存（ドボン宣言時点でdrawnCardThisTurnがあれば引きドボン）
-        (session.doboPhaseState as any).isDrawDobo = session.turnState.drawnCardThisTurn !== null;
+        // 天鳳フラグを保存
+        (session.doboPhaseState as any).isTenho = isTenho;
+        // 引きドボンフラグを保存（天鳳では引きドボンにならない）
+        (session.doboPhaseState as any).isDrawDobo = !isTenho && (session as any).lastDrawPlayerId === playerId;
         
         // 全プレイヤーに ドボン通知を送信
         const doboData = session.doboPhaseState.firstDoboDeclaration;
@@ -777,6 +890,7 @@ export class GameSocketHandler {
             formula: doboData.formula,
             cardsUsed: doboData.cards.length,
             timeoutSeconds: 30,
+            isTenho,
           });
         }
 
@@ -800,41 +914,37 @@ export class GameSocketHandler {
         // ゲーム終了（バーストと同じ扱い）
         const penaltyPlayer = session.gameState.players.find(p => p.id === playerId);
         const multiplier = session.multiplierState.totalMultiplier;
+        const penaltyReason = (session as any).lastPenaltyReason || 'invalid_formula';
+        delete (session as any).lastPenaltyReason;
 
-        // 山札から支払いカードを引く
-        let drawnCard = null;
-        let cardValue = 1;
-        try {
-          if (session.deckState.deck.length === 0 && session.deckState.discardPile.length > 0) {
-            this.deckManager.reshuffleDeck(session.deckState);
-          }
-          if (session.deckState.deck.length > 0) {
-            drawnCard = this.deckManager.drawCard(session.deckState);
-            cardValue = drawnCard.value;
-          }
-        } catch {
-          // 山札が空の場合は1として計算
-        }
+        // 支払いカードを引く（A連続ルール対応）
+        const paymentResult = this.paymentCalculator.drawPaymentCardWithAceRule(session.deckState, session.multiplierState);
+        const amount = paymentResult.cardValue * session.baseRate * multiplier * paymentResult.aceMultiplier * 4; // チョボンは×4追加
 
-        const amount = cardValue * session.baseRate * multiplier;
+        // チョボン: 敗者が自分以外の全プレイヤーに支払う
+        const otherPlayers = session.gameState.players.filter(p => p.id !== playerId);
 
         session.gameState.gamePhase = 'ended';
         const endData = {
           winnerId: '',
           winnerName: '全員',
+          loserId: playerId,
           loserName: penaltyPlayer?.user.userName || 'Unknown',
-          multiplier,
+          multiplier: multiplier * paymentResult.aceMultiplier * 4,
           baseRate: session.baseRate,
-          payments: [{
+          payments: otherPlayers.map(p => ({
             payer: penaltyPlayer ? this.simplifyPlayer(penaltyPlayer) : { id: playerId, name: 'Unknown' },
-            payee: { id: '', name: '全員' },
+            payee: this.simplifyPlayer(p),
             amount,
-            reason: 'invalid-formula',
-            drawnCard,
-          }],
+            reason: penaltyReason,
+            drawnCard: paymentResult.finalCard,
+          })),
           doboFormula: '',
+          doboCards: penaltyPlayer?.hand || [],
+          fieldCard: session.deckState.fieldCard,
           returnCount: 0,
           isPenalty: true,
+          penaltyReason,
         };
 
         for (const [socketId, info] of this.socketPlayerMap.entries()) {
@@ -843,7 +953,13 @@ export class GameSocketHandler {
           }
         }
 
-        logger.info('Dobo penalty - game ended', { roomId, playerId, amount, cardValue });
+        logger.info('Dobo penalty - game ended', { roomId, playerId, amount, cardValue: paymentResult.cardValue });
+
+        // 敗者を記録（次ゲームの開始プレイヤー用）
+        this.lastLoserMap.set(roomId, playerId);
+
+        // ゲーム結果を永続化
+        this.saveGameRecord(roomId, session, endData);
       }
 
       callback({ success });
@@ -885,8 +1001,20 @@ export class GameSocketHandler {
           isWinner: session.doboPhaseState.pendingPlayerIds.length === 0,
         });
 
-        // ドボンフェーズが終了したか確認
-        this.checkDoboPhaseEnd(roomId, session);
+        // declareReturn内でcheckDoboPhaseEnd→determineWinnerが呼ばれてisActive=falseになる場合がある
+        if (!session.doboPhaseState.isActive) {
+          // 既に勝者決定済み → ゲーム終了処理
+          this.finalizeDoboGame(roomId, session);
+          // タイマーをクリア
+          const timeoutId = this.doboTimeoutMap.get(roomId);
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+            this.doboTimeoutMap.delete(roomId);
+          }
+        } else {
+          // まだ他のプレイヤーの返し待ち
+          this.checkDoboPhaseEnd(roomId, session);
+        }
       } else {
         // ペナルティ発生通知
         this.broadcastToRoom(roomId, 'game:penalty', {
@@ -984,9 +1112,45 @@ export class GameSocketHandler {
 
       // ゲーム状態を再送信
       const gameState = this.buildGameStateForClient(session, playerId);
-      callback({ success: true, gameState });
 
-      logger.info('Rejoin successful', { roomId, playerId });
+      // 追加状態: effectPending（2/K効果猶予中）
+      const victimInfo = this.effectVictimMap.get(roomId);
+      let effectPending = null;
+      if (victimInfo && this.effectTimeoutMap.has(roomId)) {
+        effectPending = {
+          effectType: victimInfo.cardValue === 2 ? 'forced-draw' : 'open-hand',
+          victimId: victimInfo.victimId,
+          counterCard: victimInfo.cardValue,
+          timeoutSeconds: 30, // 残り時間は正確に計算できないので最大値
+          effectCount: session.turnState.forcedDrawCount,
+        };
+      }
+
+      // 追加状態: doboPhaseActive（ドボンフェーズ中）
+      const doboPhaseActive = session.doboPhaseState.isActive;
+      let doboPhaseData = null;
+      if (doboPhaseActive && session.doboPhaseState.firstDoboDeclaration) {
+        doboPhaseData = {
+          declarantId: session.doboPhaseState.firstDoboDeclaration.playerId,
+          formula: session.doboPhaseState.firstDoboDeclaration.formula,
+          timeoutSeconds: 30,
+          pendingPlayerIds: session.doboPhaseState.pendingPlayerIds,
+        };
+      }
+
+      // 追加状態: ゲーム終了済みか
+      const isGameEnded = session.gameState.gamePhase === 'ended';
+
+      callback({
+        success: true,
+        gameState,
+        effectPending,
+        doboPhaseActive,
+        doboPhaseData,
+        isGameEnded,
+      });
+
+      logger.info('Rejoin successful', { roomId, playerId, effectPending: !!effectPending, doboPhaseActive });
     } catch (error) {
       logger.error('Rejoin failed', { error: (error as Error).message });
       callback({ success: false });
@@ -1040,21 +1204,44 @@ export class GameSocketHandler {
     const lastPlayedPlayer = session.gameState.lastPlayedPlayer;
 
     // 倍率更新: 条件に応じて加算
+    // 天鳳: ×4
+    const isTenho = (session.doboPhaseState as any).isTenho || false;
+    if (isTenho) {
+      // 天鳳は×4（2回×2を加算）
+      session.multiplierState.totalMultiplier *= 4;
+      logger.info('Tenho multiplier applied (x4)');
+    }
+
     // 引きドボン: 山札から引いたターンにドボン成立 → ×2
     if ((session.doboPhaseState as any).isDrawDobo) {
       this.multiplierCalculator.addDrawDobo(session.multiplierState);
       logger.info('Draw dobon multiplier applied');
     }
 
-    // オープンドボン: 手札が全て公開状態でドボン → ×2
-    if (winnerPlayer && winnerPlayer.hand.length > 0 && winnerPlayer.hand.every(c => c.isPublic)) {
-      this.multiplierCalculator.addOpenDobo(session.multiplierState);
-      logger.info('Open dobon multiplier applied');
+    // フルオープンドボン: 宣言者の手札が全て公開状態 → ×2（宣言ごとに判定）
+    // 引きドボンの場合、引いたカード（最後に追加された1枚）は非公開なので除外して判定
+    // ドボン宣言者
+    if (doboPhase.firstDoboDeclaration) {
+      const declCards = doboPhase.firstDoboDeclaration.cards;
+      const isDrawDobo = (session.doboPhaseState as any).isDrawDobo;
+      // 引きドボンなら最後の1枚（引いたカード）を除外して判定
+      const cardsToCheck = isDrawDobo && declCards.length > 1
+        ? declCards.slice(0, -1)
+        : declCards;
+      if (cardsToCheck.length > 0 && cardsToCheck.every(c => c.isPublic)) {
+        this.multiplierCalculator.addOpenDobo(session.multiplierState);
+        logger.info('Open dobon multiplier applied (declarant)');
+      }
     }
-    
-    // 返しドボンがあれば追加倍率 → ×2 per counter
-    for (let i = 0; i < session.doboPhaseState.returnDeclarations.length; i++) {
+    // 各返しドボン宣言者
+    for (const returnDecl of doboPhase.returnDeclarations) {
+      // 返しドボン自体の倍率 ×2
       this.multiplierCalculator.addReturnDobo(session.multiplierState);
+      // 返しドボン宣言者がフルオープンならさらに ×2
+      if (returnDecl.cards.length > 0 && returnDecl.cards.every(c => c.isPublic)) {
+        this.multiplierCalculator.addOpenDobo(session.multiplierState);
+        logger.info('Open dobon multiplier applied (return declarant)', { playerId: returnDecl.playerId });
+      }
     }
 
     const multiplier = session.multiplierState.totalMultiplier;
@@ -1062,35 +1249,65 @@ export class GameSocketHandler {
     // 支払い計算
     let payments: any[] = [];
     let loserName = '';
-    try {
-      if (lastPlayedPlayer && winnerPlayer) {
-        const payment = this.paymentCalculator.calculateDoboPayment(
-          session.baseRate,
-          session.multiplierState,
-          session.deckState,
-          lastPlayedPlayer,
-          winnerPlayer
-        );
-        payments = [{
-          payer: this.simplifyPlayer(lastPlayedPlayer),
-          payee: this.simplifyPlayer(winnerPlayer),
-          amount: payment.amount,
-          reason: payment.reason,
-          drawnCard: payment.drawnCard,
-        }];
-        loserName = lastPlayedPlayer.user.userName;
+    let paymentAceCount = 0;
+
+    if (isTenho && doboPhase.returnDeclarations.length === 0) {
+      // 天鳳（返しなし）: 全員→天鳳者に支払い
+      const paymentResult = this.paymentCalculator.drawPaymentCardWithAceRule(session.deckState, session.multiplierState);
+      const amount = paymentResult.cardValue * session.baseRate * multiplier * paymentResult.aceMultiplier;
+      paymentAceCount = Math.log2(paymentResult.aceMultiplier);
+      const otherPlayers = session.gameState.players.filter(p => p.id !== winnerId);
+      payments = otherPlayers.map(p => ({
+        payer: this.simplifyPlayer(p),
+        payee: this.simplifyPlayer(winnerPlayer!),
+        amount,
+        reason: 'tenho',
+        drawnCard: paymentResult.finalCard,
+      }));
+      loserName = '全員';
+    } else {
+      // 通常ドボン/返しドボン: 敗者の決定
+      // - 通常ドボン（返しなし）: lastPlayedPlayer（場札を出した人）
+      // - ドボン返しあり: 最後から2番目の宣言者が敗者
+      let loserPlayer: Player | null;
+      if (doboPhase.returnDeclarations.length > 0) {
+        let loserId: string;
+        if (doboPhase.returnDeclarations.length === 1) {
+          loserId = doboPhase.firstDoboDeclaration?.playerId || '';
+        } else {
+          loserId = doboPhase.returnDeclarations[doboPhase.returnDeclarations.length - 2].playerId;
+        }
+        loserPlayer = session.gameState.players.find(p => p.id === loserId) || null;
+      } else {
+        loserPlayer = lastPlayedPlayer;
       }
-    } catch (e) {
-      logger.warn('Payment calculation failed (deck empty)', { error: (e as Error).message });
-      if (lastPlayedPlayer && winnerPlayer) {
-        payments = [{
-          payer: this.simplifyPlayer(lastPlayedPlayer),
-          payee: this.simplifyPlayer(winnerPlayer),
-          amount: session.baseRate * multiplier,
-          reason: 'dobo',
-          drawnCard: null,
-        }];
-        loserName = lastPlayedPlayer.user.userName;
+
+      try {
+        if (loserPlayer && winnerPlayer) {
+          const paymentResult = this.paymentCalculator.drawPaymentCardWithAceRule(session.deckState, session.multiplierState);
+          const amount = paymentResult.cardValue * session.baseRate * multiplier * paymentResult.aceMultiplier;
+          paymentAceCount = Math.log2(paymentResult.aceMultiplier);
+          payments = [{
+            payer: this.simplifyPlayer(loserPlayer),
+            payee: this.simplifyPlayer(winnerPlayer),
+            amount,
+            reason: 'dobo',
+            drawnCard: paymentResult.finalCard,
+          }];
+          loserName = loserPlayer.user.userName;
+        }
+      } catch (e) {
+        logger.warn('Payment calculation failed (deck empty)', { error: (e as Error).message });
+        if (loserPlayer && winnerPlayer) {
+          payments = [{
+            payer: this.simplifyPlayer(loserPlayer),
+            payee: this.simplifyPlayer(winnerPlayer),
+            amount: session.baseRate * multiplier,
+            reason: 'dobo',
+            drawnCard: null,
+          }];
+          loserName = loserPlayer.user.userName;
+        }
       }
     }
 
@@ -1101,7 +1318,7 @@ export class GameSocketHandler {
     const endData = {
       winnerId,
       winnerName: winnerPlayer ? winnerPlayer.user.userName : 'Unknown',
-      loserId: lastPlayedPlayer?.id || '',
+      loserId: '',
       loserName,
       multiplier,
       baseRate: session.baseRate,
@@ -1110,6 +1327,8 @@ export class GameSocketHandler {
       doboCards: session.doboPhaseState.firstDoboDeclaration?.cards || [],
       fieldCard: session.deckState.fieldCard,
       returnCount: session.doboPhaseState.returnDeclarations.length,
+      paymentAceCount,
+      isTenho,
     };
 
     // POC: 直接ソケットに送信
@@ -1127,6 +1346,21 @@ export class GameSocketHandler {
     }
 
     logger.info('Game ended', { roomId, winnerId, winnerName: endData.winnerName, loserName, multiplier, payments: payments.length });
+
+    // 次ゲームの開始プレイヤーを記録
+    if (isTenho) {
+      // 天鳳: 天鳳者からスタート
+      this.lastLoserMap.set(roomId, winnerId);
+    } else if (loserName && loserName !== '全員') {
+      // 通常: 敗者からスタート（payments[0].payerから取得）
+      const loserId = payments[0]?.payer?.id;
+      if (loserId) {
+        this.lastLoserMap.set(roomId, loserId);
+      }
+    }
+
+    // ゲーム結果を永続化
+    this.saveGameRecord(roomId, session, endData);
   }
 
   /**
@@ -1282,6 +1516,7 @@ export class GameSocketHandler {
       multiplier: session.multiplierState.totalMultiplier,
       gamePhase: session.gameState.gamePhase,
       lastPlayedPlayer: session.gameState.lastPlayedPlayer ? this.simplifyPlayer(session.gameState.lastPlayedPlayer) : null,
+      lastPlayedCards: session.gameState.lastPlayedCards || [],
       turnOrder: session.turnState.turnOrder,
       turnDirection: session.turnState.turnDirection,
       deckRemaining: session.deckState.deck.length,
@@ -1304,36 +1539,27 @@ export class GameSocketHandler {
 
     const multiplier = session.multiplierState.totalMultiplier;
     
-    // 山札から支払いカードを引く
-    let drawnCard = null;
-    let cardValue = 1;
-    try {
-      if (session.deckState.deck.length === 0 && session.deckState.discardPile.length > 0) {
-        this.deckManager.reshuffleDeck(session.deckState);
-      }
-      if (session.deckState.deck.length > 0) {
-        drawnCard = this.deckManager.drawCard(session.deckState);
-        cardValue = drawnCard.value;
-      }
-    } catch {
-      // 山札が空の場合は1として計算
-    }
+    // 支払いカードを引く（A連続ルール対応）
+    const paymentResult = this.paymentCalculator.drawPaymentCardWithAceRule(session.deckState, session.multiplierState);
+    const amount = paymentResult.cardValue * session.baseRate * multiplier * paymentResult.aceMultiplier * 4; // バーストは×4追加
 
-    const amount = cardValue * session.baseRate * multiplier;
+    // バースト: 敗者が自分以外の全プレイヤーに支払う
+    const otherPlayers = session.gameState.players.filter(p => p.id !== burstPlayer.id);
 
     const endData = {
       winnerId: '',
       winnerName: '全員',
+      loserId: burstPlayer.id,
       loserName: burstPlayer.user.userName,
-      multiplier,
+      multiplier: multiplier * paymentResult.aceMultiplier * 4,
       baseRate: session.baseRate,
-      payments: [{
+      payments: otherPlayers.map(p => ({
         payer: this.simplifyPlayer(burstPlayer),
-        payee: { id: '', name: '全員' },
+        payee: this.simplifyPlayer(p),
         amount,
         reason: 'burst',
-        drawnCard,
-      }],
+        drawnCard: paymentResult.finalCard,
+      })),
       doboFormula: '',
       returnCount: 0,
       isBurst: true,
@@ -1345,7 +1571,13 @@ export class GameSocketHandler {
       }
     }
 
-    logger.info('Game ended by burst', { roomId, burstPlayer: burstPlayer.id, amount, cardValue });
+    logger.info('Game ended by burst', { roomId, burstPlayer: burstPlayer.id, amount, cardValue: paymentResult.cardValue });
+
+    // 敗者を記録（次ゲームの開始プレイヤー用）
+    this.lastLoserMap.set(roomId, burstPlayer.id);
+
+    // ゲーム結果を永続化
+    this.saveGameRecord(roomId, session, endData);
   }
 
   /**
@@ -1402,5 +1634,78 @@ export class GameSocketHandler {
     
     this.io.to(roomId).emit(eventName, data);
     logger.debug('Broadcast to room', { roomId, eventName });
+  }
+
+  // ===== 統計関連メソッド =====
+
+  /**
+   * ゲーム結果を永続化
+   */
+  private saveGameRecord(roomId: string, session: GameSession, endData: any): void {
+    try {
+      const playerNames: Record<string, string> = {};
+      for (const p of session.gameState.players) {
+        playerNames[p.id] = p.user.userName;
+      }
+
+      let endReason: 'dobon' | 'return_dobon' | 'burst' | 'penalty' = 'dobon';
+      if (endData.isBurst) {
+        endReason = 'burst';
+      } else if (endData.isPenalty) {
+        endReason = 'penalty';
+      } else if (session.doboPhaseState.returnDeclarations.length > 0) {
+        endReason = 'return_dobon';
+      }
+
+      const record: GameRecord = {
+        gameId: session.gameState.gameId,
+        roomId,
+        timestamp: new Date().toISOString(),
+        players: session.gameState.players.map(p => p.id),
+        playerNames,
+        winnerId: endData.winnerId || '',
+        loserId: endData.loserId || '',
+        endReason,
+        multiplier: endData.multiplier || 1,
+        baseRate: session.baseRate,
+        payments: (endData.payments || []).map((p: any) => ({
+          payerId: p.payer?.id || '',
+          payeeId: p.payee?.id || '',
+          amount: p.amount || 0,
+        })),
+      };
+
+      this.historyStore.saveRecord(record);
+    } catch (error) {
+      logger.error('Failed to save game record', { error: (error as Error).message });
+    }
+  }
+
+  /**
+   * プレイヤー統計取得
+   */
+  private handleGetPlayerStats(socket: Socket, data: any, callback: any): void {
+    const { playerId } = data;
+    try {
+      const stats = this.statsCalculator.getPlayerStats(playerId);
+      callback({ success: true, stats });
+    } catch (error) {
+      logger.error('Get player stats failed', { error: (error as Error).message });
+      callback({ success: false });
+    }
+  }
+
+  /**
+   * ルーム内収支取得
+   */
+  private handleGetRoomBalance(socket: Socket, data: any, callback: any): void {
+    const { roomId } = data;
+    try {
+      const balance = this.statsCalculator.getRoomBalance(roomId);
+      callback({ success: true, balance });
+    } catch (error) {
+      logger.error('Get room balance failed', { error: (error as Error).message });
+      callback({ success: false });
+    }
   }
 }

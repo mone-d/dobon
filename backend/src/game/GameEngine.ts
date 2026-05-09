@@ -107,6 +107,7 @@ export class GameEngine {
       doboDeclarations: [],
       returnDoboDeclarations: [],
       lastPlayedPlayer: null,
+      lastPlayedCards: [],
       turnOrder: players,
       turnDirection: 'forward',
     };
@@ -190,9 +191,15 @@ export class GameEngine {
       }
     }
 
-    // 捨札に場札を追加（公開状態をリセット）
+    // 捨札に現在の場札を追加（公開状態をリセット）
     deckState.fieldCard.isPublic = false;
     deckState.discardPile.push(deckState.fieldCard);
+
+    // 複数枚出しの場合、最後の1枚以外も捨て札に追加
+    for (let i = 0; i < cards.length - 1; i++) {
+      cards[i].isPublic = false;
+      deckState.discardPile.push(cards[i]);
+    }
 
     // 場札を最後に出したカードに更新
     deckState.fieldCard = cards[cards.length - 1];
@@ -201,6 +208,7 @@ export class GameEngine {
 
     // 最後に場札を出したプレイヤーを記録
     gameState.lastPlayedPlayer = player;
+    gameState.lastPlayedCards = cards;
 
     logger.info('Card played', {
       playerId,
@@ -341,12 +349,6 @@ export class GameEngine {
   endTurn(session: GameSession): void {
     const { turnState, gameState, deckState } = session;
 
-    // A効果: スキップ処理
-    while (turnState.skippedPlayerIds.length > 0) {
-      const skipPlayerId = turnState.skippedPlayerIds.shift();
-      logger.debug('Player skipped', { playerId: skipPlayerId });
-    }
-
     // 2効果: 次のプレイヤーのターンのdrawCardで適用
     // （endTurnでは何もしない。GameSocketHandlerが管理）
     if (turnState.forcedDrawCount > 0) {
@@ -360,15 +362,35 @@ export class GameEngine {
       return;
     }
 
-    // 次のプレイヤーに移行
-    turnState.currentPlayerIndex = this.getNextPlayerIndex(session);
+    // 次のプレイヤーに移行（スキップ対象を飛ばす）
+    let nextIndex = this.getNextPlayerIndex(session);
+    const totalPlayers = session.gameState.players.length;
+    let skipsApplied = 0;
+
+    // スキップ対象を飛ばす（無限ループ防止: 最大プレイヤー数分）
+    while (turnState.skippedPlayerIds.length > 0 && skipsApplied < totalPlayers) {
+      const nextPlayerId = turnState.turnOrder[nextIndex];
+      if (turnState.skippedPlayerIds.includes(nextPlayerId)) {
+        // このプレイヤーをスキップ
+        turnState.skippedPlayerIds = turnState.skippedPlayerIds.filter(id => id !== nextPlayerId);
+        logger.debug('Player skipped', { playerId: nextPlayerId });
+        // さらに次へ
+        turnState.currentPlayerIndex = nextIndex;
+        nextIndex = this.getNextPlayerIndex(session);
+        skipsApplied++;
+      } else {
+        break;
+      }
+    }
+
+    turnState.currentPlayerIndex = nextIndex;
     turnState.hasDrawnThisTurn = false;
     turnState.drawnCardThisTurn = null;
 
     const nextPlayerId = turnState.turnOrder[turnState.currentPlayerIndex];
     gameState.currentPlayer = gameState.players.find((p) => p.id === nextPlayerId) || gameState.currentPlayer;
 
-    logger.debug('Turn ended', { nextPlayer: nextPlayerId });
+    logger.debug('Turn ended', { nextPlayer: nextPlayerId, skipsApplied });
   }
 
   /**
