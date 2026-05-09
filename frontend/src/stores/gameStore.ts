@@ -24,6 +24,9 @@ interface GameStore {
     formula: string;
     isSuccess: boolean;
   } | null;
+
+  // ドボンフェーズ中フラグ（ドボン宣言〜ゲーム終了まで）
+  doboPhaseActive: boolean;
   
   // Suit selection state (for wild card 8)
   suitSelectionRequired: boolean;
@@ -95,6 +98,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   currentRoomId: null,
   error: null,
   doboEffect: null,
+  doboPhaseActive: false,
   suitSelectionRequired: false,
   returnDoboPhase: null,
   effectPending: null,
@@ -110,7 +114,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // ===== ゲーム状態更新イベント =====
     socket.on('game:state-updated', (gameState: GameStateForClient) => {
       console.log('📊 Game state updated:', gameState);
-      set({ gameState });
+      // ターンが変わったら選択状態をクリア
+      const prevState = get().gameState;
+      if (prevState && prevState.currentPlayer?.id !== gameState.currentPlayer?.id) {
+        set({ gameState, selectedCardIndices: [] });
+      } else {
+        set({ gameState });
+      }
     });
 
     // ===== ゲーム開始イベント =====
@@ -118,11 +128,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
       console.log('🎮 Game started:', data);
       
       // Clear previous game end data
-      set({ gameEndData: null });
+      set({ gameEndData: null, doboPhaseActive: false, effectPending: null });
       
       // Set room ID if provided
       if (data.roomId) {
         set({ currentRoomId: data.roomId });
+      }
+      
+      // 初期AでレートUPの通知
+      if (data.initialACount && data.initialACount > 0) {
+        const msg = `開始時にAが${data.initialACount}枚！レート×${Math.pow(2, data.initialACount)}`;
+        get().setError(msg); // 一時的にトースト表示（5秒で消える）
       }
       
       // ゲーム状態を更新
@@ -183,12 +199,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           effectCount: data.effectCount || 0,
         },
       });
-      // タイムアウト後に自動クリア
-      setTimeout(() => {
-        if (get().effectPending?.victimId === data.victimId) {
-          set({ effectPending: null });
-        }
-      }, (data.timeoutSeconds + 1) * 1000);
+      // クリアは game:effect-applied 受信時のみ（setTimeoutによる自動クリアは行わない）
     });
 
     socket.on('game:effect-applied', (data: any) => {
@@ -200,6 +211,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     socket.on('game:dobo', (data: any) => {
       console.log('💥 Dobo declared:', data);
       
+      // ドボンフェーズ開始
+      set({ doboPhaseActive: true });
+
       // ドボンエフェクトを表示
       const currentState = get().gameState;
       const currentUserId = get().currentUserId;
@@ -288,6 +302,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         gameEndData: data,
         returnDoboPhase: null, // 返しドボンフェーズを終了
         doboEffect: null, // ドボンエフェクトを非表示
+        doboPhaseActive: false, // ドボンフェーズ終了
+        effectPending: null, // 2/K効果をクリア
       });
     });
 
@@ -295,7 +311,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     socket.on('game:error', (error: any) => {
       console.error('❌ Game error:', error);
       const errorMessage = error.message || error.error || 'ゲームエラーが発生しました';
-      set({ error: errorMessage });
+      get().setError(errorMessage);
     });
 
     // ===== 接続状態イベント =====
@@ -311,8 +327,37 @@ export const useGameStore = create<GameStore>((set, get) => ({
         // まずゲームセッションへの再参加を試みる
         socket.emit('game:rejoin', { roomId: currentRoomId, playerId: currentUserId }, (response: any) => {
           if (response.success && response.gameState) {
-            console.log('✅ Auto-rejoin game successful - game in progress');
+            console.log('✅ Auto-rejoin game successful', {
+              effectPending: !!response.effectPending,
+              doboPhaseActive: response.doboPhaseActive,
+              isGameEnded: response.isGameEnded,
+            });
+            
+            // ゲーム状態を復元
             set({ gameState: response.gameState });
+            
+            // effectPending状態を復元
+            if (response.effectPending) {
+              set({ effectPending: response.effectPending });
+            } else {
+              set({ effectPending: null });
+            }
+            
+            // ドボンフェーズ状態を復元
+            if (response.doboPhaseActive) {
+              set({ doboPhaseActive: true });
+              // 自分がドボン宣言者でなければ返しフェーズUI表示
+              if (response.doboPhaseData && response.doboPhaseData.pendingPlayerIds?.includes(currentUserId)) {
+                set({
+                  returnDoboPhase: {
+                    active: true,
+                    timeoutSeconds: response.doboPhaseData.timeoutSeconds || 30,
+                  }
+                });
+              }
+            } else {
+              set({ doboPhaseActive: false, returnDoboPhase: null });
+            }
           } else {
             // ゲームがなければ待機ルームへの再参加を試みる
             socket.emit('room:rejoin', { roomId: currentRoomId, playerId: currentUserId }, (roomResponse: any) => {
@@ -353,6 +398,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
         get().rejoinGame(currentRoomId, currentUserId);
       }
     });
+
+    // タブ復帰時の状態同期（接続が維持されていた場合も含む）
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          const { currentRoomId, currentUserId } = get();
+          if (currentRoomId && currentUserId && get().isConnected) {
+            console.log('🔄 Tab visible, syncing game state...');
+            get().rejoinGame(currentRoomId, currentUserId);
+          }
+        }
+      });
+    }
 
     socket.on('reconnect_attempt', (attemptNumber: number) => {
       console.log('🔄 Reconnection attempt', attemptNumber);
@@ -420,10 +478,36 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (response.success) {
         console.log('✅ Rejoined game successfully');
         set({ error: null });
-        // ゲーム状態は game:state-updated で更新される
+        
+        // ゲーム状態を復元
+        if (response.gameState) {
+          set({ gameState: response.gameState });
+        }
+        
+        // effectPending状態を復元
+        if (response.effectPending) {
+          set({ effectPending: response.effectPending });
+        } else {
+          set({ effectPending: null });
+        }
+        
+        // ドボンフェーズ状態を復元
+        if (response.doboPhaseActive) {
+          set({ doboPhaseActive: true });
+          if (response.doboPhaseData && response.doboPhaseData.pendingPlayerIds?.includes(playerId)) {
+            set({
+              returnDoboPhase: {
+                active: true,
+                timeoutSeconds: response.doboPhaseData.timeoutSeconds || 30,
+              }
+            });
+          }
+        } else {
+          set({ doboPhaseActive: false, returnDoboPhase: null });
+        }
       } else {
         console.error('❌ Failed to rejoin game:', response.error);
-        set({ error: `ゲームへの再参加に失敗しました: ${response.error}` });
+        get().setError(`ゲームへの再参加に失敗しました: ${response.error}`);
       }
     });
   },
@@ -446,7 +530,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         // Note: gameState will be updated via game:state-updated event
       } else {
         console.error('❌ Failed to start game:', response.error);
-        set({ error: `ゲーム開始に失敗しました: ${response.error}` });
+        get().setError(`ゲーム開始に失敗しました: ${response.error}`);
       }
     });
   },
@@ -504,8 +588,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
         set({ selectedCardIndices: [], error: null });
         // ゲーム状態は game:state-updated で更新される
       } else {
-        console.error('❌ Failed to play cards:', response);
-        set({ error: `カードをプレイできませんでした: ${response.error || '不明なエラー'}` });
+        console.log('Card play rejected:', response);
+        // 出せない理由をワーニングで表示
+        const reason = response.error === 'INVALID_CARD'
+          ? '場札とマークも数字も一致しません'
+          : response.error === 'DIFFERENT_VALUES'
+          ? '複数枚出しは同じ数字のみです'
+          : response.error === 'effect_pending'
+          ? '効果発動中は出せません'
+          : '条件に合うカードを選んでください';
+        get().setError(reason);
       }
     });
   },
@@ -563,7 +655,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         // ゲーム状態は game:state-updated で更新される
       } else {
         console.error('❌ Failed to select suit:', response);
-        set({ error: 'スート選択に失敗しました' });
+        get().setError('マーク選択に失敗しました');
       }
     });
   },
@@ -611,7 +703,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         // 返しドボンエフェクトは game:return イベントで表示される
       } else {
         console.error('❌ Failed to declare return dobo:', response);
-        set({ error: '返しドボンに失敗しました' });
+        get().setError('ドボン返しに失敗しました');
       }
     });
   },
@@ -634,7 +726,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         // ゲーム状態は game:state-updated で更新される
       } else {
         console.error('❌ Failed to declare no return:', response);
-        set({ error: '返しなし宣言に失敗しました' });
+        get().setError('返しなし宣言に失敗しました');
       }
     });
   },

@@ -109,7 +109,7 @@ export function getSpecialCardEffect(value: CardValue): string {
     case 1: // A
       return '倍率+1（初期配布時のみ）';
     case 2:
-      return '次のプレイヤーは2枚引く（スタック可能）';
+      return '次のプレイヤーは2ドロー（スタック可能）';
     case 8:
       return 'スキップ（次のプレイヤーの番を飛ばす）';
     case 11: // J

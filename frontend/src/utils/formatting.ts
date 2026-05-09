@@ -130,11 +130,11 @@ export function formatGamePhase(phase: string): string {
     case 'playing':
       return 'プレイ中';
     case 'suit-selection':
-      return 'スート選択';
+      return 'マーク選択';
     case 'dobo-declaration':
       return 'ドボン宣言';
     case 'return-dobo':
-      return '返しドボン';
+      return 'ドボン返し';
     case 'payment':
       return '支払い';
     case 'ended':

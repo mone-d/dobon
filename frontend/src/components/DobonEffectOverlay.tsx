@@ -108,7 +108,7 @@ export function DobonEffectOverlay({ pattern, info, visible, onDismiss }: Props)
           <div className="flex items-start gap-2 mb-2.5">
             <span className="text-2xl shrink-0">🎯</span>
             <div className="flex-1">
-              <div className="text-red-400/80 text-[9px] font-bold tracking-widest uppercase">Dobon 宣言！</div>
+              <div className="text-red-400/80 text-[9px] font-bold tracking-widest uppercase">ドボン宣言！</div>
               <div className="text-white font-black text-base leading-tight">{info.playerName}</div>
             </div>
             <button
@@ -139,7 +139,7 @@ export function DobonEffectOverlay({ pattern, info, visible, onDismiss }: Props)
             <span className="text-lg shrink-0">🎯</span>
             <div className="flex-1 min-w-0">
               <span className="text-white font-black text-sm">{info.playerName}</span>
-              <span className="text-white/70 text-sm"> が DOBON！ </span>
+              <span className="text-white/70 text-sm"> が ドボン！ </span>
               <span className="text-yellow-300 text-sm font-bold">{info.formula} = {info.result}</span>
             </div>
             <div className="flex gap-0.5 shrink-0">
@@ -185,7 +185,7 @@ export function DobonEffectOverlay({ pattern, info, visible, onDismiss }: Props)
               あなたが宣言
             </div>
             <div className="text-white font-black text-2xl text-center tracking-wide mb-2.5">
-              🎯 DOBON！
+              🎯 ドボン！
             </div>
             <div className="flex justify-center mb-2">
               <CardFormula cards={info.cards} formula={info.formula} result={info.result} />
@@ -228,7 +228,7 @@ export function DobonEffectOverlay({ pattern, info, visible, onDismiss }: Props)
             <div className="text-red-400 text-[10px] font-bold tracking-widest uppercase mb-0.5">
               あなたが宣言
             </div>
-            <div className="text-white font-black text-3xl">DOBON！</div>
+            <div className="text-white font-black text-3xl">ドボン！</div>
           </div>
           <div className="bg-white/5 rounded-2xl p-3.5 flex justify-center mb-4">
             <CardFormula cards={info.cards} formula={info.formula} result={info.result} />
@@ -260,7 +260,7 @@ export function DobonEffectOverlay({ pattern, info, visible, onDismiss }: Props)
           <div className="flex items-center gap-2">
             <span className="text-xl shrink-0">🎯</span>
             <div className="flex-1">
-              <div className="text-white font-black text-sm">あなたが DOBON！</div>
+              <div className="text-white font-black text-sm">あなたが ドボン！</div>
               <div className="text-red-300 text-xs">
                 {info.formula} = <span className="text-yellow-300 font-bold">{info.result}</span>
               </div>

@@ -73,7 +73,7 @@ export default function HomeScreen() {
         <div className="mb-10">
           <div className="text-6xl mb-4 text-center">🃏</div>
           <h1 className="text-5xl font-black text-white tracking-wider text-center mb-2">
-            DOBON
+            ドボン
           </h1>
           <p className="text-green-400/70 text-sm text-center tracking-wide">
             オンライン対戦カードゲーム

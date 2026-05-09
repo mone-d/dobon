@@ -85,10 +85,10 @@ export function formatMultiplierBreakdown(breakdown: MultiplierBreakdown): strin
     lines.push(`引きドボン: +${breakdown.drawDobo}`);
   }
   if (breakdown.openDobo > 0) {
-    lines.push(`オープンドボン: +${breakdown.openDobo}`);
+    lines.push(`フルオープンドボン: +${breakdown.openDobo}`);
   }
   if (breakdown.returnDobo > 0) {
-    lines.push(`返しドボン: +${breakdown.returnDobo}`);
+    lines.push(`ドボン返し: +${breakdown.returnDobo}`);
   }
   if (breakdown.reshuffle > 0) {
     lines.push(`リシャッフル: +${breakdown.reshuffle}`);

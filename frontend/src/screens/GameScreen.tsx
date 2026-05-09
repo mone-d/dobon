@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useGameStore } from '../stores/gameStore';
 import { useUserStore } from '../stores/userStore';
 import { OpponentPlayer } from '../components/OpponentPlayer';
@@ -9,19 +9,26 @@ import { SuitSelector } from '../components/SuitSelector';
 import { ReturnDoboUI } from '../components/ReturnDoboUI';
 import { EffectBanner } from '../components/EffectBanner';
 import { EffectCountdown } from '../components/EffectCountdown';
+import { PlayerStatsModal } from '../components/PlayerStatsModal';
+import { RoomBalanceModal } from '../components/RoomBalanceModal';
 import { toCardDisplay, suitToSymbol } from '../types/domain';
 import type { CardDisplay } from '../types/domain';
 
 export default function GameScreen() {
   const { currentUser } = useUserStore();
   const [leaveNextDeclared, setLeaveNextDeclared] = useState(false);
-  const { 
+  const [cardEffectToast, setCardEffectToast] = useState<{ icon: string; text: string; color: string } | null>(null);
+  const [statsTarget, setStatsTarget] = useState<{ id: string; name: string } | null>(null);
+  const [showRoomBalance, setShowRoomBalance] = useState(false);
+  const prevGameStateRef = useRef<typeof gameState>(null);
+  const {
     gameState, 
     selectedCardIndices,
     doboEffect,
     suitSelectionRequired,
     returnDoboPhase,
     currentUserId,
+    doboPhaseActive,
     selectCard, 
     deselectCard, 
     clearSelection,
@@ -61,6 +68,7 @@ export default function GameScreen() {
       const hand = p.hand || [];
       
       return {
+        id: p.id,
         name: userName,
         cardCount: handCount,
         revealedCards: hand.filter(c => c.isPublic).map(c => toCardDisplay(c)),
@@ -179,6 +187,69 @@ export default function GameScreen() {
     });
   };
 
+  // ===== 特殊カード効果バナー =====
+  const [bannerTurnCount, setBannerTurnCount] = useState(0); // バナー表示後のターン変更回数
+  const [bannerType, setBannerType] = useState<'skip' | 'effect' | null>(null); // skip=A/9, effect=2/K
+
+  useEffect(() => {
+    if (!gameState) return;
+    const prev = prevGameStateRef.current;
+    
+    if (prev && prev.fieldCard && gameState.fieldCard) {
+      const prevValue = prev.fieldCard.value;
+      const newValue = gameState.fieldCard.value;
+      
+      // 場札が変わった場合 → 新しいバナーをセット
+      if (prevValue !== newValue || prev.fieldCard.suit !== gameState.fieldCard.suit) {
+        if (newValue === 1) {
+          setCardEffectToast({ icon: '⏭', text: 'スキップ！', color: 'bg-blue-600/90 border-blue-400/50' });
+          setBannerType('skip');
+          setBannerTurnCount(0);
+        } else if (newValue === 9 && gameState.turnDirection !== prev.turnDirection) {
+          setCardEffectToast({ icon: '🔄', text: 'リバース！', color: 'bg-purple-600/90 border-purple-400/50' });
+          setBannerType('skip');
+          setBannerTurnCount(0);
+        } else if (newValue === 2) {
+          setCardEffectToast({ icon: '⚡', text: '2ドロー！', color: 'bg-red-600/90 border-red-400/50' });
+          setBannerType('effect');
+          setBannerTurnCount(0);
+        } else if (newValue === 13) {
+          setCardEffectToast({ icon: '👁', text: 'オープン！', color: 'bg-amber-600/90 border-amber-400/50' });
+          setBannerType('effect');
+          setBannerTurnCount(0);
+        }
+        // A/9以外かつ2/K以外: バナーがskipタイプなら消す
+        else if (bannerType === 'skip') {
+          // ターンカウントで管理するのでここでは消さない
+        }
+      }
+
+      // ターンが変わった場合（A/9バナーのカウント）
+      if (prev.currentPlayer?.id !== gameState.currentPlayer?.id && bannerType === 'skip' && cardEffectToast) {
+        const newCount = bannerTurnCount + 1;
+        setBannerTurnCount(newCount);
+        // 次のターンが終わった = ターンが2回変わった
+        if (newCount >= 2) {
+          setCardEffectToast(null);
+          setBannerType(null);
+        }
+      }
+    }
+    
+    prevGameStateRef.current = gameState;
+  }, [gameState]);
+
+  // 2/K効果が終了したらバナーも消す
+  useEffect(() => {
+    if (!effectPending && cardEffectToast && bannerType === 'effect') {
+      setCardEffectToast(null);
+      setBannerType(null);
+    }
+  }, [effectPending]);
+
+  // lastPlayedCards from backend (for fan display)
+  const lastPlayedCardsDisplay: CardDisplay[] = (gameState?.lastPlayedCards || []).map(c => toCardDisplay(c));
+
   // Show loading if no game state
   if (!gameState) {
     return (
@@ -198,11 +269,13 @@ export default function GameScreen() {
       style={{ background: 'linear-gradient(135deg, #0a3d1f 0%, #0d2e17 50%, #061a0e 100%)' }}
     >
       <div
-        className="relative flex flex-col overflow-hidden"
+        className="relative flex flex-col"
+        onClick={() => { if (selectedCardIndices.length > 0) clearSelection(); }}
         style={{
           width: '100%',
           maxWidth: '430px',
           height: '100dvh',
+          overflow: 'hidden',
           background: 'linear-gradient(180deg, #0d3520 0%, #0a2818 40%, #081e12 100%)',
         }}
       >
@@ -210,7 +283,7 @@ export default function GameScreen() {
         <div className="flex items-center justify-between px-3 py-1.5 bg-black/30 border-b border-white/5 shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-green-400 text-base">🃏</span>
-            <span className="text-white/80 text-xs font-bold tracking-wider">DOBON</span>
+            <span className="text-white/80 text-xs font-bold tracking-wider">ドボン</span>
             {/* 次で抜けるボタン */}
             {!leaveNextDeclared ? (
               <button
@@ -231,9 +304,17 @@ export default function GameScreen() {
               <span className="text-yellow-300 text-xs font-semibold">{currentTurnPlayerName}のターン</span>
             </div>
           )}
-          <div className="flex items-center gap-1 bg-amber-500/15 border border-amber-500/30 rounded-full px-2.5 py-0.5">
-            <span className="text-amber-400/70 text-[10px]">BASE</span>
-            <span className="text-amber-300 text-xs font-bold">¥100</span>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setShowRoomBalance(true)}
+              className="bg-white/10 border border-white/20 text-white/70 text-[10px] font-bold px-1.5 py-0.5 rounded-full hover:bg-white/20 transition-colors"
+            >
+              💰
+            </button>
+            <div className="flex items-center gap-1 bg-amber-500/15 border border-amber-500/30 rounded-full px-2.5 py-0.5">
+              <span className="text-amber-400/70 text-[10px]">BASE</span>
+              <span className="text-amber-300 text-xs font-bold">¥100</span>
+            </div>
           </div>
         </div>
 
@@ -241,7 +322,7 @@ export default function GameScreen() {
         <div className="shrink-0 p-2 pb-1">
           <div className="grid grid-cols-3 gap-1.5">
             {opponents.map((opponent, idx) => (
-              <OpponentPlayer key={idx} {...opponent} />
+              <OpponentPlayer key={idx} {...opponent} onTap={() => setStatsTarget({ id: opponent.id, name: opponent.name })} />
             ))}
           </div>
         </div>
@@ -249,41 +330,54 @@ export default function GameScreen() {
         <div className="mx-3 border-t border-white/10" />
 
         {/* ターン順表示 */}
-        <div className="flex items-center justify-center gap-1 px-3 py-1 bg-black/20">
-          <span className="text-white/40 text-[10px]">順:</span>
-          {gameState.turnOrder.map((playerId) => {
+        <div className="flex items-center justify-center gap-0.5 px-3 py-1.5 bg-black/20">
+          {gameState.turnOrder.map((playerId, idx) => {
             const player = gameState.players.find(p => p.id === playerId);
             const isCurrent = playerId === gameState.currentPlayer?.id;
             const isMe = playerId === currentPlayerId;
-            const name = isMe ? '自分' : (player?.name?.charAt(0) || '?');
+            const name = isMe ? '自' : (player?.name?.charAt(0) || '?');
             return (
-              <span
-                key={playerId}
-                className={`text-[10px] px-1.5 py-0.5 rounded ${
-                  isCurrent
-                    ? 'bg-yellow-500/30 text-yellow-300 font-bold'
-                    : isMe
-                    ? 'text-green-400'
-                    : 'text-white/50'
-                }`}
-              >
-                {name}
-              </span>
+              <div key={playerId} className="flex items-center">
+                <div
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${
+                    isCurrent
+                      ? 'bg-yellow-400 text-gray-900 ring-2 ring-yellow-300 ring-offset-1 ring-offset-transparent'
+                      : isMe
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-600 text-white/80'
+                  }`}
+                >
+                  {name}
+                </div>
+                {idx < gameState.turnOrder.length - 1 && (
+                  <span className="text-white/30 text-[10px] mx-0.5">
+                    {gameState.turnDirection === 'reverse' ? '←' : '→'}
+                  </span>
+                )}
+              </div>
             );
           })}
-          <span className="text-white/30 text-[10px] ml-1">
-            {gameState.turnDirection === 'reverse' ? '← 逆' : '→'}
-          </span>
         </div>
 
-        {/* 特殊カード効果バナー */}
-        <EffectBanner
-          forcedDrawCount={gameState.effects?.forcedDrawCount || 0}
-          skippedPlayerIds={gameState.effects?.skippedPlayerIds || []}
-          playerNames={Object.fromEntries(
-            gameState.players.map(p => [p.id, p.name])
-          )}
-        />
+        {/* 特殊カード効果バナー（画面最上部、全特殊カード共通） */}
+        <EffectBanner effect={cardEffectToast} />
+
+        {/* 2/K効果タイムゲージ（バナーの下に表示） */}
+        {effectPending && (
+          <EffectCountdown
+            effectType={effectPending.effectType}
+            victimId={effectPending.victimId}
+            currentUserId={currentPlayerId}
+            timeoutSeconds={effectPending.timeoutSeconds}
+            effectCount={effectPending.effectCount}
+            onAccept={() => {
+              const { socket, currentRoomId } = useGameStore.getState();
+              if (socket && currentRoomId && currentUser) {
+                socket.emit('game:accept-effect', { roomId: currentRoomId, playerId: currentUser.userId }, () => {});
+              }
+            }}
+          />
+        )}
 
         {/* Game Field */}
         <GameField
@@ -293,12 +387,16 @@ export default function GameScreen() {
           multiplier={multiplier}
           selectedSuit={gameState.selectedSuit ? suitToSymbol[gameState.selectedSuit] : undefined}
           dobonDeclarations={[]}
+          lastPlayedCards={lastPlayedCardsDisplay}
           onDrawCard={isMyTurn ? handleDrawCard : undefined}
         />
 
         {/* Player Hand */}
         <div className={`shrink-0 ${isMyTurn ? 'bg-yellow-900/20 border-t-2 border-yellow-500/40' : ''}`}>
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-black/20 border-t border-white/5">
+          <div
+            className="flex items-center gap-2 px-3 py-1.5 bg-black/20 border-t border-white/5 cursor-pointer"
+            onClick={(e) => { e.stopPropagation(); if (currentPlayerId) setStatsTarget({ id: currentPlayerId, name: currentUser?.userName || 'あなた' }); }}
+          >
             <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
               isMyTurn ? 'bg-gradient-to-br from-yellow-400 to-amber-600 animate-pulse' : 'bg-gradient-to-br from-green-400 to-emerald-600'
             }`}>
@@ -309,6 +407,7 @@ export default function GameScreen() {
             <span className={`text-xs ${isMyTurn ? 'text-yellow-300 font-bold' : 'text-white/50'}`}>
               {isMyTurn ? '🎯 あなたのターンです！' : '自分のターン待ち'}
             </span>
+            <span className="text-white/30 text-[10px] ml-auto">📊</span>
           </div>
 
           <PlayerHand
@@ -325,12 +424,17 @@ export default function GameScreen() {
             onPlayCards={isMyTurn ? handlePlayCards : undefined}
           />
 
-          <div className="bg-gray-950/60 px-4 pb-4 pt-2">
+          <div className="bg-gray-950/60 px-4 pb-3 pt-1" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={handleDobon}
-              className="w-full bg-gradient-to-b from-red-500 to-red-700 hover:from-red-400 hover:to-red-600 active:from-red-700 active:to-red-900 text-white font-black text-base py-3 rounded-xl shadow-lg shadow-red-900/50 border border-red-400/30 transition-all active:scale-95"
+              disabled={doboPhaseActive}
+              className={`w-full font-black text-base py-3 rounded-xl shadow-lg border transition-all active:scale-95 ${
+                doboPhaseActive
+                  ? 'bg-gray-600 text-gray-400 border-gray-500/30 shadow-none cursor-not-allowed'
+                  : 'bg-gradient-to-b from-red-500 to-red-700 hover:from-red-400 hover:to-red-600 active:from-red-700 active:to-red-900 text-white shadow-red-900/50 border-red-400/30'
+              }`}
             >
-              🎯 DOBON！
+              {gameState.lastPlayedPlayer === null ? '🀄 天鳳！' : '🎯 ドボン！'}
             </button>
           </div>
         </div>
@@ -365,28 +469,28 @@ export default function GameScreen() {
             <div className="bg-gradient-to-b from-gray-800 to-gray-900 border-2 border-white/20 rounded-2xl p-6 w-[85%] max-w-[320px] text-center">
               <div className="text-3xl mb-3">⏳</div>
               <div className="text-white font-bold text-lg mb-2">他のプレイヤーの判定待ち</div>
-              <div className="text-white/60 text-sm">返しドボンの判定を待っています...</div>
+              <div className="text-white/60 text-sm">ドボン返しの判定を待っています...</div>
             </div>
           </div>
         )}
 
-        {/* Effect Countdown (2/K stacking) */}
-        {effectPending && (
-          <EffectCountdown
-            effectType={effectPending.effectType}
-            victimId={effectPending.victimId}
-            currentUserId={currentPlayerId}
-            counterCard={effectPending.counterCard}
-            timeoutSeconds={effectPending.timeoutSeconds}
-            effectCount={effectPending.effectCount}
-            onAccept={() => {
-              const { socket, currentRoomId } = useGameStore.getState();
-              if (socket && currentRoomId && currentUser) {
-                socket.emit('game:accept-effect', { roomId: currentRoomId, playerId: currentUser.userId }, () => {});
-              }
-            }}
+        {/* 統計モーダル */}
+        {statsTarget && (
+          <PlayerStatsModal
+            playerId={statsTarget.id}
+            playerName={statsTarget.name}
+            onClose={() => setStatsTarget(null)}
           />
         )}
+
+        {/* ルーム収支モーダル */}
+        {showRoomBalance && (
+          <RoomBalanceModal
+            roomId={useGameStore.getState().currentRoomId || ''}
+            onClose={() => setShowRoomBalance(false)}
+          />
+        )}
+
       </div>
     </div>
   );

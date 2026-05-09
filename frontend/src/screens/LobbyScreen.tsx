@@ -39,7 +39,7 @@ export default function LobbyScreen() {
         <div className="flex items-center justify-between px-4 py-3 bg-black/30 border-b border-white/5 shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-green-400 text-xl">🃏</span>
-            <span className="text-white/80 text-sm font-bold tracking-wider">DOBON ロビー</span>
+            <span className="text-white/80 text-sm font-bold tracking-wider">ドボン ロビー</span>
           </div>
           <div className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1">
             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center">
@@ -66,7 +66,7 @@ export default function LobbyScreen() {
               <button
                 onClick={handleJoinByCode}
                 disabled={roomCode.trim().length !== 4}
-                className={`px-6 py-3 rounded-lg font-bold transition-all ${
+                className={`shrink-0 px-5 py-3 rounded-lg font-bold transition-all ${
                   roomCode.trim().length === 4
                     ? 'bg-green-600 hover:bg-green-500 active:bg-green-700 text-white'
                     : 'bg-white/10 text-white/40 cursor-not-allowed'

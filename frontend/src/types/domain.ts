@@ -207,6 +207,7 @@ export interface GameStateForClient {
   multiplier: number;
   gamePhase: GamePhase;
   lastPlayedPlayer: { id: string; name: string } | null; // Simplified player
+  lastPlayedCards?: Card[]; // 最後にプレイされたカード群（複数枚対応）
   turnOrder: string[];
   turnDirection: TurnDirection;
   deckRemaining: number; // 山札の残り枚数

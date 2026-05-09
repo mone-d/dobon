@@ -14,7 +14,8 @@ export function SuitSelector({ onSelectSuit }: SuitSelectorProps) {
     <div className="absolute bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-gray-900 via-gray-900/95 to-transparent pt-8 pb-4 px-4">
       <div className="text-center mb-3">
         <div className="text-yellow-400 text-xs font-bold tracking-widest uppercase">ワイルドカード</div>
-        <div className="text-white font-black text-base">スートを選択</div>
+        <div className="text-white font-black text-base">マークを選択</div>
+        <div className="text-white/60 text-xs mt-0.5">マークを選択してください</div>
       </div>
 
       <div className="grid grid-cols-4 gap-2">

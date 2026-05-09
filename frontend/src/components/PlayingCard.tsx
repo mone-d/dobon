@@ -69,7 +69,7 @@ export function PlayingCard({
         <span className={cfg.suit}>{suit}</span>
       </div>
 
-      {!cornerOnly && (
+      {!cornerOnly && size !== 'xs' && (
         <>
           {/* 中央スート */}
           <div className={`absolute inset-0 flex items-center justify-center ${cfg.center} ${isRed ? 'text-red-500' : 'text-gray-800'} select-none`}>
@@ -82,6 +82,12 @@ export function PlayingCard({
             <span className={cfg.suit}>{suit}</span>
           </div>
         </>
+      )}
+      {/* xsサイズ: 中央にスートのみ（コーナーと重ならない位置） */}
+      {!cornerOnly && size === 'xs' && (
+        <div className={`absolute bottom-0.5 right-0.5 ${cfg.suit} ${isRed ? 'text-red-500' : 'text-gray-800'} select-none`}>
+          {suit}
+        </div>
       )}
     </div>
   );

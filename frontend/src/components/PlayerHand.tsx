@@ -39,25 +39,26 @@ export function PlayerHand({ cards, selectedIndices, highlightIndices = [], onCa
   const totalWidth = cardCount > 0 ? (cardCount - 1) * overlapStep + CARD_WIDTH : 0;
 
   return (
-    <div className="bg-gray-900/70 border-t-2 border-gray-700/80 px-4 py-3">
-      {/* ヘッダー行 */}
-      <div className="flex items-center justify-between mb-2">
+    <div className="bg-gray-900/70 border-t-2 border-gray-700/80 px-4 py-2" onClick={(e) => e.stopPropagation()}>
+      {/* ヘッダー行（高さ固定） */}
+      <div className="flex items-center justify-between mb-2 h-8">
         <div className="flex items-center gap-2">
           <span className="text-white/90 text-sm font-bold">手札</span>
           <span className="bg-white/10 text-white/70 text-xs px-1.5 py-0.5 rounded-full">{cardCount}枚</span>
         </div>
-        {selectedIndices.length > 0 && (
+        {/* カード選択時のみ表示 */}
+        {selectedIndices.length > 0 && onPlayCards && (
           <button
             onClick={onPlayCards}
-            className="bg-green-600 hover:bg-green-500 active:bg-green-700 text-white font-bold text-sm px-4 py-1.5 rounded-lg shadow transition-colors"
+            className="font-bold text-sm px-4 py-1.5 rounded-lg bg-green-600 hover:bg-green-500 active:bg-green-700 text-white shadow transition-all"
           >
             {selectedIndices.length}枚出す
           </button>
         )}
       </div>
 
-      {/* カードエリア */}
-      <div className="flex items-end justify-center" style={{ height: '84px' }}>
+      {/* カードエリア（選択時の上昇分を含む固定高さ） */}
+      <div className="flex items-end justify-center overflow-visible" style={{ height: '86px' }}>
         <div
           className="relative flex items-end"
           style={{ width: `${totalWidth}px`, height: '76px' }}

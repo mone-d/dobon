@@ -38,9 +38,12 @@ class SocketService {
     // ブラウザがフォアグラウンドに戻った時に再接続を試みる
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible' && this.socket && !this.socket.connected) {
-          console.log('🔄 Page visible, reconnecting...');
-          this.socket.connect();
+        if (document.visibilityState === 'visible' && this.socket) {
+          if (!this.socket.connected) {
+            console.log('🔄 Page visible, reconnecting...');
+            this.socket.connect();
+          }
+          // 接続中の場合の状態同期はgameStoreのvisibilitychangeリスナーで処理
         }
       });
     }

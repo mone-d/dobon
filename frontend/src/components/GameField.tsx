@@ -22,6 +22,7 @@ interface GameFieldProps {
   multiplier?: number;
   selectedSuit?: Suit; // 8のワイルドカードで選択されたスート
   dobonDeclarations?: DobonDeclaration[];
+  lastPlayedCards?: Card[]; // 最後にプレイされたカード群（複数枚対応）
   onDrawCard?: () => void;
 }
 
@@ -32,10 +33,11 @@ export function GameField({
   multiplier = 1,
   selectedSuit,
   dobonDeclarations = [],
+  lastPlayedCards = [],
   onDrawCard,
 }: GameFieldProps) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-3 px-4 py-2 relative">
+    <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-2 px-4 py-1 relative">
 
       {/* ドボン表示バナー */}
       {dobonDeclarations.length > 0 && (
@@ -49,7 +51,7 @@ export function GameField({
                 <span className="text-lg">🎯</span>
                 <div className="flex-1 min-w-0">
                   <div className="text-white font-black text-sm">
-                    DOBON! &nbsp;<span className="text-yellow-300">{dobon.playerName}</span>
+                    ドボン! &nbsp;<span className="text-yellow-300">{dobon.playerName}</span>
                   </div>
                   <div className="text-red-200 text-xs">
                     {dobon.formula} = <span className="font-bold text-white">{dobon.result}</span>
@@ -127,15 +129,48 @@ export function GameField({
           <div className="relative">
             {discardPile ? (
               <>
-                <PlayingCard suit={discardPile.suit} rank={discardPile.rank} size="lg" />
-                {/* 8のワイルドカードで選択されたスート表示 */}
-                {selectedSuit && discardPile.rank === '8' && (
-                  <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-amber-600 border-2 border-yellow-300 flex items-center justify-center shadow-lg z-10">
-                    <span className="text-lg">{selectedSuit}</span>
+                {/* 複数枚プレイ時のファン表示 */}
+                {lastPlayedCards.length > 1 ? (
+                  <div className="relative" style={{ width: `${64 + (lastPlayedCards.length - 1) * 20}px`, height: '96px' }}>
+                    {lastPlayedCards.map((card, idx) => {
+                      const totalCards = lastPlayedCards.length;
+                      const offsetX = idx * 20; // 横に20pxずつずらす
+                      const rotation = (idx - (totalCards - 1) / 2) * 5; // 軽い角度
+                      const isTop = idx === totalCards - 1;
+                      return (
+                        <div
+                          key={idx}
+                          className="absolute top-0"
+                          style={{
+                            left: `${offsetX}px`,
+                            transform: `rotate(${rotation}deg)`,
+                            zIndex: idx,
+                          }}
+                        >
+                          <PlayingCard suit={card.suit} rank={card.rank} size="lg" />
+                          {/* 一番上のカードにスートバッジ */}
+                          {isTop && selectedSuit && card.rank === '8' && (
+                            <div className="absolute -top-3 -right-3 w-9 h-9 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center shadow-lg z-10">
+                              <span className={`text-xl font-bold ${selectedSuit === '♥' || selectedSuit === '♦' ? 'text-red-500' : 'text-gray-900'}`}>{selectedSuit}</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
+                ) : (
+                  <>
+                    <PlayingCard suit={discardPile.suit} rank={discardPile.rank} size="lg" />
+                    {/* 8のワイルドカードで選択されたスート表示 */}
+                    {selectedSuit && discardPile.rank === '8' && (
+                      <div className="absolute -top-3 -right-3 w-9 h-9 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center shadow-lg z-10">
+                        <span className={`text-xl font-bold ${selectedSuit === '♥' || selectedSuit === '♦' ? 'text-red-500' : 'text-gray-900'}`}>{selectedSuit}</span>
+                      </div>
+                    )}
+                  </>
                 )}
                 {discardedBy && (
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gray-900 border border-gray-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shadow">
+                  <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 bg-gray-900 border border-gray-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shadow z-20">
                     {discardedBy}
                   </div>
                 )}

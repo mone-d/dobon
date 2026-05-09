@@ -33,7 +33,7 @@ export function ReturnDoboUI({ timeoutSeconds, onDeclareReturn, onDeclareNoRetur
         <div className="flex items-center gap-3 mb-2">
           <span className="text-2xl">⚡</span>
           <div className="flex-1">
-            <div className="text-white font-black text-sm">返しドボンチャンス</div>
+            <div className="text-white font-black text-sm">ドボン返しチャンス</div>
             <div className="text-orange-200/70 text-xs">手札でドボンできるなら返せます</div>
           </div>
           <div className="text-white font-black text-lg">{remainingTime}s</div>
@@ -51,7 +51,7 @@ export function ReturnDoboUI({ timeoutSeconds, onDeclareReturn, onDeclareNoRetur
             onClick={onDeclareReturn}
             className="flex-1 bg-gradient-to-b from-red-500 to-red-700 hover:from-red-400 hover:to-red-600 text-white font-black text-sm py-2.5 rounded-lg border border-red-400/30 transition-all active:scale-95"
           >
-            🔄 返しドボン！
+            🔄 ドボン返し！
           </button>
           <button
             onClick={onDeclareNoReturn}
